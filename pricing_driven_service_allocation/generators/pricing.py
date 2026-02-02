@@ -62,18 +62,22 @@ def pricing_from_topology(
         idx: f"{row['provider']}_{idx}" for idx, row in devices_df.iterrows()
     }
 
+    device_types = sorted(devices_df['device_type'].dropna().unique().tolist())
+    features = {
+        device_type: {
+            'type': 'DOMAIN',
+            'valueType': 'BOOLEAN',
+            'defaultValue': False
+        }
+        for device_type in device_types
+    }
+
     pricing = {
         'saasName': topology_id,
         'syntaxVersion': '3.0',
         'version': '1.0.0',
         'createdAt': date.today().isoformat(),
-        'features': {
-            'deployment': {
-                'type': 'DOMAIN',
-                'valueType': 'BOOLEAN',
-                'defaultValue': True
-            }
-        },
+        'features': features,
         'usageLimits': {
             'available_ram': {
                 'unit': 'GB',
@@ -133,9 +137,9 @@ def pricing_from_topology(
         addon = {
             'price': f"{row['unit_price_available_RAM']} * #available_ram + {row['unit_price_available_Storage']} * #available_storage + {row['unit_price_available_vCPU']} * #available_vcpu + {row['unit_price_available_GPU']} * #available_gpu + {row['unit_price_available_TPU']} * #available_tpu",
             'features': {
-                'deployment': {
+                row['device_type']: {
                     'value': True
-                }  
+                }
             },
             'usageLimitsExtensions': {
                 'available_ram': {

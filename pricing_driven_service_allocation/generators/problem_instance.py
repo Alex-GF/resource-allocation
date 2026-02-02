@@ -8,7 +8,7 @@ import os
 import pandas as pd
 from typing import Tuple
 
-def resolve_price(addon_details, resources: dict, unlimited_value: int = 100000000) -> float:
+def resolve_price(addon_details, resources: dict) -> float:
     """
     Evaluate a price expression by replacing resource placeholders with actual values.
 
@@ -18,9 +18,6 @@ def resolve_price(addon_details, resources: dict, unlimited_value: int = 1000000
         The add-on details containing the price expression.
     resources : dict
         A dictionary with resource values to replace in the expression.
-    unlimited_value : int, optional
-        Value to use for unlimited resources. Default is 100000000.
-
     Returns
     -------
     float
@@ -87,6 +84,7 @@ def problem_instance(
                 ],
                 'budget': int,
                 'max_devices': int, # If not set, 'max_devices' = total_devices
+                'device_types': [str, str, ...], # e.g., ['SENSOR', 'CAMERA']
                 'resources': {
                     'available_ram': int,      # in GB          | if not provided defaults to 0
                     'available_storage': int,  # in GB          | if not provided defaults to 0
@@ -149,7 +147,7 @@ def problem_instance(
                 continue
             
         # Compute price based on user requirements
-        addon_details.price.number_value = resolve_price(addon_details, request['resources'], unlimited_value)
+        addon_details.price.number_value = resolve_price(addon_details, request['resources'])
         
         # Calculate distance attribute
         device_id = int(addon_name.split('_')[1])
@@ -212,5 +210,9 @@ def problem_instance(
     if 'usageLimits' not in filter_criteria:
         filter_criteria['usageLimits'] = {}
     filter_criteria['usageLimits']['distance'] = unlimited_value - max_distance
+    
+    # Add device_types to features in filter criteria
+    if 'device_types' in request:
+        filter_criteria['features'] = request['device_types']
     
     return (pricing_to_resolve, filter_criteria)

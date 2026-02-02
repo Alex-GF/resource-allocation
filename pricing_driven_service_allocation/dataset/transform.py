@@ -49,7 +49,7 @@ def assign_device_resources(
     config: Optional[Dict] = None
 ) -> pd.DataFrame:
     """
-    Assign realistic resource capacities and unit prices to each device.
+    Assign realistic resource capacities, unit prices, and device types to each device.
 
     Parameters
     -----------
@@ -83,6 +83,11 @@ def assign_device_resources(
                         'available_vCPU': {'min': 1, 'max': 64, 'default_price': 0},
                         'available_GPU': {'min': 0, 'max': 8, 'default_price': 0},
                         'available_TPU': {'min': 0, 'max': 4, 'default_price': 0}
+                    },
+                    'device_types_by_group': {
+                        1: {'CAMERA': 50, 'MOBILE': 45, 'SENSOR': 5},
+                        2: {'COMPUTER': 25, 'LAPTOP': 25, 'MOBILE': 25, 'ROUTER': 25},
+                        3: {'SERVER': 100}
                     }
                 }
 
@@ -104,6 +109,11 @@ def assign_device_resources(
             'available_vCPU': {'min': 1, 'max': 64, 'default_price': 0},
             'available_GPU': {'min': 0, 'max': 8, 'default_price': 0},
             'available_TPU': {'min': 0, 'max': 4, 'default_price': 0}
+        },
+        'device_types_by_group': {
+            1: {'CAMERA': 50, 'MOBILE': 45, 'SENSOR': 5},
+            2: {'COMPUTER': 25, 'LAPTOP': 25, 'MOBILE': 25, 'ROUTER': 25},
+            3: {'SERVER': 100}
         }
     }
 
@@ -140,6 +150,9 @@ def assign_device_resources(
                     config['attributes'][attr].setdefault('default_price', 0)
                     config['attributes'][attr].setdefault('price_by_provider_group', {})
 
+        if 'device_types_by_group' not in config:
+            config['device_types_by_group'] = default_config['device_types_by_group']
+
     df_result = df.copy()
     n_devices = len(df_result)
 
@@ -156,6 +169,33 @@ def assign_device_resources(
 
     np.random.shuffle(groups)
     df_result['global_group'] = groups
+
+    # Assign device types per group using configured probabilities
+    device_types_by_group = config.get('device_types_by_group', {})
+    if device_types_by_group:
+        device_types = np.empty(n_devices, dtype=object)
+        for group in [1, 2, 3]:
+            group_mask = df_result['global_group'] == group
+            group_size = group_mask.sum()
+            if group_size == 0:
+                continue
+
+            type_probs = device_types_by_group.get(group, {})
+            if not type_probs:
+                type_probs = default_config['device_types_by_group'].get(group, {})
+
+            total_pct = sum(type_probs.values())
+            if total_pct != 100:
+                raise ValueError(
+                    f"device_types_by_group for group {group} must sum to 100 (got {total_pct})."
+                )
+
+            type_names = list(type_probs.keys())
+            probabilities = np.array(list(type_probs.values()), dtype=float) / 100.0
+            assigned = np.random.choice(type_names, size=group_size, p=probabilities)
+            device_types[group_mask] = assigned
+
+        df_result['device_type'] = device_types
 
     # Process numeric attributes (all configured attributes)
     integer_attrs = list(config['attributes'].keys())
