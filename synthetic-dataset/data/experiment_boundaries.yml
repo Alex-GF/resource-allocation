@@ -1,0 +1,37 @@
+# device_density < 1 will randomly (with seed) filter out devices
+# client_density < 1 will randomly (with seed) filter out clients
+# box_coordinates defines a square area (lat/long); first point = last point
+
+# max_distance serves as a proxy for latency; services must be deployed on devices within distance
+# max_distance serves as a proxy for latency; services must be deployed on devices within distance
+
+experiments:
+  small:
+    device_density: 0.33
+    client_density: 0.33
+    box_coordinates:
+      - [144.95128085314013, -37.81311379425756]
+      - [144.954906094624, -37.82109949971801]
+      - [144.97481006469786, -37.81512407043976]
+      - [144.97090595848454, -37.807413124398344]
+      - [144.95128085314013, -37.81311379425756]
+    max_distance: 5000
+    budget: 1000
+  medium:
+    device_density: 0.66
+    client_density: 0.66
+    box_coordinates:
+      - [144.95128085314013, -37.81311379425756]
+      - [144.954906094624, -37.82109949971801]
+      - [144.97481006469786, -37.81512407043976]
+      - [144.97090595848454, -37.807413124398344]
+      - [144.95128085314013, -37.81311379425756]
+  large:
+    device_density: 1
+    client_density: 1
+    box_coordinates:
+      - [144.95128085314013, -37.81311379425756]
+      - [144.954906094624, -37.82109949971801]
+      - [144.97481006469786, -37.81512407043976]
+      - [144.97090595848454, -37.807413124398344]
+      - [144.95128085314013, -37.81311379425756]
