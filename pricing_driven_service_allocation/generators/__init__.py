@@ -9,6 +9,7 @@ Modules
 - topology: Functions for generating device topologies within geographic areas
 - pricing: Functions for generating pricing YAML files from topologies
 - problem_instance: Functions for generating problem instances from pricing and user requests
+- client_demand: Functions for generating hardware demand from user locations
 """
 
 from .topology import topology
@@ -23,5 +24,8 @@ __all__ = [
     'pricing_from_topology',
     
     # Problem Instance
-    'problem_instance', 
+    'problem_instance',
+
+    # Demand Generator
+    'client_demand',
 ]
