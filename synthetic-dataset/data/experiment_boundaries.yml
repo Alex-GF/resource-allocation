@@ -23,7 +23,7 @@ experiments:
     ar/vr:
       device_density: 0.33
       client_density: 0.33
-      box_coordinates:
+      clients_polygon:
         - [ 144.95128085314013, -37.81311379425756 ]
         - [ 144.954906094624, -37.82109949971801 ]
         - [ 144.97481006469786, -37.81512407043976 ]
@@ -35,7 +35,7 @@ experiments:
   medium:
     device_density: 0.66
     client_density: 0.66
-    box_coordinates:
+    clients_polygon:
       - [ 144.95128085314013, -37.81311379425756 ]
       - [ 144.954906094624, -37.82109949971801 ]
       - [ 144.97481006469786, -37.81512407043976 ]
@@ -44,7 +44,7 @@ experiments:
   large:
     device_density: 1
     client_density: 1
-    box_coordinates:
+    clients_polygon:
       - [ 144.95128085314013, -37.81311379425756 ]
       - [ 144.954906094624, -37.82109949971801 ]
       - [ 144.97481006469786, -37.81512407043976 ]

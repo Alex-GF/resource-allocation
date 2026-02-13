@@ -1,5 +1,5 @@
 from .load import (
-    load_devices_dataframe, load_c_locations_dataframe
+    load_devices_dataframe, load_client_locations_dataframe
 )
 
 from .transform import (
@@ -10,7 +10,7 @@ from .transform import (
 __all__ = [
     # Data Loading
     'load_devices_dataframe',
-    'load_c_locations_dataframe',
+    'load_client_locations_dataframe',
     
     # Data Transformation
     'filter_devices_by_vendors',
