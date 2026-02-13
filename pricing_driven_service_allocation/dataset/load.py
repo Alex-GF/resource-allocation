@@ -55,7 +55,7 @@ def load_devices_dataframe(path: str) -> pd.DataFrame:
     return df
 
 
-def load_c_locations_dataframe(path: str) -> pd.DataFrame:
+def load_client_locations_dataframe(path: str) -> pd.DataFrame:
     """
     Reads the CSV and returns a DataFrame with the required columns.
 
