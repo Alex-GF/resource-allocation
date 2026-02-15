@@ -21,32 +21,93 @@
 experiments:
   small:
     ar/vr:
-      device_density: 0.33
-      client_density: 0.33
-      clients_polygon:
-        - [ 144.95128085314013, -37.81311379425756 ]
-        - [ 144.954906094624, -37.82109949971801 ]
-        - [ 144.97481006469786, -37.81512407043976 ]
-        - [ 144.97090595848454, -37.807413124398344 ]
-        - [ 144.95128085314013, -37.81311379425756 ]
-      max_distance: 25
-      concurrency: 0.7
-      budget: 1000
+      offer:
+        # TODO: Need to include this in the topology generation, which currently only
+        #  accepts a number of devices, no ration
+        devices_density: 0.33
+        zone: # Circle
+          lat: -37.8136
+          long: 144.9631
+          elevation: 0
+          radius: 15000
+        providers:
+          OPTUS:
+            excludes:
+              - TELSTRA
+            includes:
+              - VODAFONE
+      demand:
+        clients_density: 0.33
+        concurrency: 0.7
+        zone: # Polygon
+          - [ 144.95128085314013, -37.81311379425756 ]
+          - [ 144.954906094624, -37.82109949971801 ]
+          - [ 144.97481006469786, -37.81512407043976 ]
+          - [ 144.97090595848454, -37.807413124398344 ]
+          - [ 144.95128085314013, -37.81311379425756 ]
+      request:
+        max_distance: 25
+        budget: 1000
+        providers_to_consider:
+          - TELSTRA
+          - OPTUS
   medium:
-    device_density: 0.66
-    client_density: 0.66
-    clients_polygon:
-      - [ 144.95128085314013, -37.81311379425756 ]
-      - [ 144.954906094624, -37.82109949971801 ]
-      - [ 144.97481006469786, -37.81512407043976 ]
-      - [ 144.97090595848454, -37.807413124398344 ]
-      - [ 144.95128085314013, -37.81311379425756 ]
+    ar/vr:
+      offer:
+        devices_density: 0.66
+        zone: # Circle
+          lat: -37.8136
+          long: 144.9631
+          elevation: 0
+          radius: 15000
+        providers:
+          OPTUS:
+            excludes:
+              - TELSTRA
+            includes:
+              - VODAFONE
+      demand:
+        clients_density: 0.66
+        concurrency: 0.7
+        zone: # Polygon
+          - [ 144.95128085314013, -37.81311379425756 ]
+          - [ 144.954906094624, -37.82109949971801 ]
+          - [ 144.97481006469786, -37.81512407043976 ]
+          - [ 144.97090595848454, -37.807413124398344 ]
+          - [ 144.95128085314013, -37.81311379425756 ]
+      request:
+        max_distance: 25
+        budget: 1000
+        providers_to_consider:
+          - TELSTRA
+          - OPTUS
   large:
-    device_density: 1
-    client_density: 1
-    clients_polygon:
-      - [ 144.95128085314013, -37.81311379425756 ]
-      - [ 144.954906094624, -37.82109949971801 ]
-      - [ 144.97481006469786, -37.81512407043976 ]
-      - [ 144.97090595848454, -37.807413124398344 ]
-      - [ 144.95128085314013, -37.81311379425756 ]
+    ar/vr:
+      offer:
+        devices_density: 1
+        zone: # Circle
+          lat: -37.8136
+          long: 144.9631
+          elevation: 0
+          radius: 15000
+        providers:
+          OPTUS:
+            excludes:
+              - TELSTRA
+            includes:
+              - VODAFONE
+      demand:
+        clients_density: 1
+        concurrency: 0.7
+        zone: # Polygon
+          - [ 144.95128085314013, -37.81311379425756 ]
+          - [ 144.954906094624, -37.82109949971801 ]
+          - [ 144.97481006469786, -37.81512407043976 ]
+          - [ 144.97090595848454, -37.807413124398344 ]
+          - [ 144.95128085314013, -37.81311379425756 ]
+      request:
+        max_distance: 25
+        budget: 1000
+        providers_to_consider:
+          - TELSTRA
+          - OPTUS

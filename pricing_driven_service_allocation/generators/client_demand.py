@@ -3,7 +3,7 @@ import numpy as np
 from enum import Enum
 
 class AppType(Enum):
-    AR_VR = "ar_vr"
+    AR_VR = "ar/vr"
     VIDEO_PRIVACY = "video_privacy"
     LIDAR = "lidar"
     ROBOT_IOT = "robot_iot"
