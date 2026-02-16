@@ -18,12 +18,13 @@
 # | Video Privacy | N/A     | < 100m   | On-Prem 10GbE LAN. Physically air-gapped or firewall-geofenced within building.  |
 # -------------------------------------------------------------------------------------------------------------------------
 
+# TODO: Need to create this for all four application types
+# TODO: Need to include the device information in the map.html
 experiments:
   small:
     ar/vr:
       offer:
-        # TODO: Need to include this in the topology generation, which currently only
-        #  accepts a number of devices, no ration
+        # TODO: Need to include this in the topology generation, which currently only accepts a number of devices, but no ration
         devices_density: 0.33
         zone: # Circle
           lat: -37.8136
