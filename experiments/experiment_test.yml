@@ -62,7 +62,6 @@ common_configs:
     dist_video: &dist_video 100
 
 # TODO: Budget values are still arbitrary
-# TODO: Need to include the device information in the map.html
 # TODO: Need to include the device_density in the topology generation, which currently only accepts a number of devices, but no ration
 experiments:
   small:

@@ -1,8 +1,14 @@
+import csv
+import json
+import os
+import re
 import sys
+from enum import Enum
+from typing import List
 
 import numpy as np
+import pandas as pd
 
-from enum import Enum
 
 class AppType(Enum):
     AR_VR = "ar/vr"
@@ -10,11 +16,12 @@ class AppType(Enum):
     LIDAR = "lidar"
     ROBOT_IOT = "robot_iot"
 
+
 def calculate_resources(
-    n_clients: int,
-    service_type: AppType,
-    concurrency: float = 1.0,
-    random_state: int = 35
+        n_clients: int,
+        service_type: AppType,
+        concurrency: float = 1.0,
+        random_state: int = 35
 ):
     """
     Calculates resource demand for specific Smart Environment services.
@@ -97,32 +104,130 @@ def calculate_resources(
         'cpu_total_cores': int(round(cpu_total, 0))  # Cores usually counted in 0.5s or 1s
     }
 
+
 def draw_clients_on_map(
-    topology_id: str,
-    topologies_result_dir: str,
-    clients_file: str = "clients.csv",
-    map_file: str = "map.html"
+        topology_id: str,
+        topologies_result_dir: str,
+        client_polygon: List[List[float]],
+        clients_file: str = "clients.csv",
+        map_source_file: str = "map.html",
+        map_target_file: str = "map.html"
 ):
+    """
+    Injects client coordinates and a boundary polygon into an existing map.
+    """
     topology_dir = os.path.join(topologies_result_dir, topology_id)
-    html_path = os.path.join(topology_dir, map_file)
-    with open(html_path, 'w', encoding='utf-8') as f:
-        f.write("abcd")
+    map_source_path = os.path.join(topology_dir, map_source_file)
+    map_target_path = os.path.join(topology_dir, map_target_file)
+    clients_path = os.path.join(topologies_result_dir, topology_id, clients_file)
+
+    # 1. Process Polygon (Convert [lon, lat] -> [lat, lon] for Leaflet)
+    leaflet_polygon = [[p[1], p[0]] for p in client_polygon]
+
+    # 2. Read and parse CSV data
+    clients = []
+    try:
+        with open(clients_path, mode='r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                clients.append({
+                    "latitude": float(row['latitude']),
+                    "longitude": float(row['longitude'])
+                })
+    except Exception as e:
+        return f"Error reading CSV: {e}"
+
+    # 3. Read the existing HTML file
+    if not os.path.exists(map_source_path):
+        return "Source HTML file not found."
+
+    with open(map_source_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    # 4. Inject 'clients' and 'polygon' data into JavaScript
+    data_injection = (
+        f"const clients = {json.dumps(clients, indent=4)};\n        "
+        f"const clientAreaCoords = {json.dumps(leaflet_polygon)};\n        "
+    )
+    content = content.replace("const devices =", f"{data_injection}const devices =")
+
+    # 5. Update Legend (Added 'Client Area' with a fill style)
+    client_legend = """
+            <hr style="margin: 8px 0; border: 0; border-top: 1px solid #eee;">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FFD700; border: 1px solid #000; border-radius: 0;"></div>
+                <span style="font-weight: bold;">CLIENTS</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: rgba(255, 215, 0, 0.2); border: 2px solid #FFD700; border-radius: 2px;"></div>
+                <span>Client Area</span>
+            </div>
+        </div>"""
+    content = re.sub(r'</div>\s*</div>\s*<script>', f'{client_legend}\n    </div>\n    <script>', content)
+
+    # 6. Inject Drawing Logic (Polygon + Markers)
+    # We place the polygon drawing inside renderMarkers so it persists on filter changes
+    drawing_logic = """
+            let visible = 0;
+
+            // Draw Client Polygon Area
+            if (typeof clientAreaCoords !== 'undefined') {
+                const poly = L.polygon(clientAreaCoords, {
+                    color: '#FFD700',
+                    weight: 2,
+                    fillColor: '#FFD700',
+                    fillOpacity: 0.15,
+                    dashArray: '5, 5'
+                }).addTo(markerLayer);
+                markers.push(poly);
+            }
+
+            // Plot Clients
+            // Plot Clients as Squares
+            clients.forEach((c, idx) => {
+                const squareIcon = L.divIcon({
+                    className: 'custom-square-marker',
+                    html: `<div style="width: 10px; height: 10px; background-color: #FFD700; border: 1px solid #000;"></div>`,
+                    iconSize: [10, 10],
+                    iconAnchor: [5, 5]
+                });
+
+                const m = L.marker([c.latitude, c.longitude], { icon: squareIcon })
+                           .bindPopup(`<strong>Client #${idx + 1}</strong>`)
+                           .addTo(markerLayer);
+                markers.push(m);
+                visible += 1;
+            });
+    """
+    content = content.replace("let visible = 0;", drawing_logic)
+
+    # 7. Update Header/Description
+    content = content.replace("<h1>🗺️ Device Topology</h1>", "<h1>🗺️ Device & Client Topology</h1>")
+    content = content.replace("Total: 1098", f"Total: {1098 + len(clients)}")
+
+    # 8. Save updated map
+    with open(map_target_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+    return f"Successfully updated map with polygon saved to: {map_target_path}"
+
 
 if __name__ == '__main__':
-    import pandas as pd
-    import os
+
     DATASET_RESULT_DIR = "synthetic-dataset/data"
     TOPOLOGIES_RESULT_DIR = "synthetic-dataset/synthetic-topologies"
     topology_id = "c28ad123-e113-460c-8723-ea71a59cbafe"
     CLIENTS_FILE = "clients.csv"
     MAP_FILE = "map_with_clients.html"
 
-    c_locations_df = pd.read_csv(os.path.join(TOPOLOGIES_RESULT_DIR, topology_id, CLIENTS_FILE), index_col=0)
-    draw_clients_on_map(topology_id, TOPOLOGIES_RESULT_DIR, map_file=MAP_FILE)
+    CLIENT_POLYGON = [[144.95128085314013, -37.81311379425756], [144.954906094624, -37.82109949971801],
+                      [144.97481006469786, -37.81512407043976], [144.97090595848454, -37.807413124398344],
+                      [144.95128085314013, -37.81311379425756]]
 
+    c_locations_df = pd.read_csv(os.path.join(TOPOLOGIES_RESULT_DIR, topology_id, CLIENTS_FILE), index_col=0)
+    draw_clients_on_map(topology_id, TOPOLOGIES_RESULT_DIR, CLIENT_POLYGON, map_target_file=MAP_FILE)
 
     sys.exit()
-
 
     # --- Example Usage ---
 
