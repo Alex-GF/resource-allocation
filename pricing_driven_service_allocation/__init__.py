@@ -18,12 +18,15 @@ Modules
 - utils: Subpackage with utility functions
   - yaml_utils: Functions for handling tranformation from YAML files to pricing proto objects
   - geometrical_utils: Functions for geographical calculations
+  
+- optimize: Method for solving the optimization problem using the generated data and pricing information
 """
 
 # Import generators subpackage
 from . import dataset
 from . import generators
 from . import utils
+from .optimize import optimize
 
 __version__ = '1.0.0'
 __author__ = 'Alejandro'
@@ -37,4 +40,7 @@ __all__ = [
     
     # Utilities subpackage
     'utils',
+    
+    # Optimization function
+    'optimize'
 ]
