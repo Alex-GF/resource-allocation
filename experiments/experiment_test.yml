@@ -22,7 +22,7 @@ experiments:
   small:
     ar/vr:
       offer:
-        devices_density: 0.33
+        max_devices: 500
         zone: # Circle
           lat: -37.8136
           long: 144.9631
@@ -34,6 +34,13 @@ experiments:
               - TELSTRA
             includes:
               - VODAFONE
+          TELSTRA:
+            includes:
+              - VODAFONE
+          VODAFONE:
+            includes:
+              - OPTUS
+              - TELSTRA
       demand:
         clients_density: 0.33
         concurrency: 0.7
@@ -45,14 +52,18 @@ experiments:
           - [ 144.95128085314013, -37.81311379425756 ]
       request:
         max_distance: 25
+        max_devices: 2
         budget: 1000
+        devices_types_required:
+          - CAMERA
+          - GPU
         providers_to_consider:
           - TELSTRA
           - OPTUS
   medium:
     ar/vr:
       offer:
-        devices_density: 0.66
+        max_devices: 1000
         zone: # Circle
           lat: -37.8136
           long: 144.9631
@@ -64,6 +75,13 @@ experiments:
               - TELSTRA
             includes:
               - VODAFONE
+          TELSTRA:
+            includes:
+              - VODAFONE
+          VODAFONE:
+            includes:
+              - OPTUS
+              - TELSTRA
       demand:
         clients_density: 0.66
         concurrency: 0.7
@@ -75,14 +93,18 @@ experiments:
           - [ 144.95128085314013, -37.81311379425756 ]
       request:
         max_distance: 25
+        max_devices: 5
         budget: 1000
+        devices_types_required:
+          - CAMERA
+          - GPU
         providers_to_consider:
           - TELSTRA
           - OPTUS
   large:
     ar/vr:
       offer:
-        devices_density: 1
+        max_devices: 1500
         zone: # Circle
           lat: -37.8136
           long: 144.9631
@@ -94,6 +116,13 @@ experiments:
               - TELSTRA
             includes:
               - VODAFONE
+          TELSTRA:
+            includes:
+              - VODAFONE
+          VODAFONE:
+            includes:
+              - OPTUS
+              - TELSTRA
       demand:
         clients_density: 1
         concurrency: 0.7
@@ -105,7 +134,11 @@ experiments:
           - [ 144.95128085314013, -37.81311379425756 ]
       request:
         max_distance: 25
+        max_devices: 10
         budget: 1000
+        devices_types_required:
+          - CAMERA
+          - GPU
         providers_to_consider:
           - TELSTRA
           - OPTUS
