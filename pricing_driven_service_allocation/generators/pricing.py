@@ -11,11 +11,11 @@ from datetime import date
 import pandas as pd
 from typing import Optional, List
 
-
 def pricing_from_topology(
     topology_id: str,
     topologies_result_dir: str,
-    compatible_provider_groups: Optional[List[List[str]]] = None
+    compatible_provider_groups: Optional[List[List[str]]] = None,
+    options: Optional[dict] = {}
 ) -> str:
     """
     Generate a Pricing2Yaml representation of a topology and save it to a YAML file.
@@ -30,7 +30,9 @@ def pricing_from_topology(
         List of provider groups that can be used together. If None, devices are
         only compatible within their own provider. Example: [["OPTUS", "TELSTRA"], ["VODAFONE"]]
         means OPTUS and TELSTRA devices can be used together, but not with VODAFONE devices.
-
+    options : dict, optional
+        Additional options for pricing generation.
+          - 'logs': bool, whether to print detailed logs during generation (default: True)
     Returns
     --------
     str
@@ -177,10 +179,71 @@ def pricing_from_topology(
             sort_keys=False
         )
 
-    print(f"Pricing YAML generated successfully!")
-    print(f"  - Topology ID: {topology_id}")
-    print(f"  - Devices: {len(devices_df)}")
-    print(f"  - Providers: {metadata['providers_in_topology']}")
-    print(f"  - File saved: {yaml_path}")
+    if options.get('logs', True):  
+      print(f"Pricing YAML generated successfully!")
+      print(f"  - Topology ID: {topology_id}")
+      print(f"  - Devices: {len(devices_df)}")
+      print(f"  - Providers: {metadata['providers_in_topology']}")
+      print(f"  - File saved: {yaml_path}")
 
     return yaml_path
+
+def compatible_provider_groups_from_offer(topology_offer: dict) -> List[List[str]]:
+    """
+    Extract compatible provider groups from a topology offer.
+
+    Parameters
+    ----------
+    topology_offer : dict
+        The topology offer containing provider compatibility information.
+        Expected format:
+        {
+            'providers': {
+                'OPTUS': {
+                    'excludes': ['TELSTRA'],
+                    'includes': ['VODAFONE']
+                },
+                'TELSTRA': {
+                    'includes': ['VODAFONE']
+                },
+                ...
+            }
+        }
+
+    Returns
+    -------
+    List[List[str]]
+        A list of compatible provider groups. Each sublist represents a group of
+        providers that can work together.
+        Example: [['OPTUS', 'VODAFONE'], ['TELSTRA', 'VODAFONE']]
+    """
+    providers_config = topology_offer.get('providers', {})
+    
+    # Build compatibility groups for each provider
+    provider_groups = []
+    
+    for provider_name, config in providers_config.items():
+        # Start with the provider itself
+        compatible_group = {provider_name.upper()}
+        
+        # Add providers from 'includes' list
+        includes = config.get('includes', [])
+        for included_provider in includes:
+            compatible_group.add(included_provider.upper())
+        
+        # Remove providers from 'excludes' list
+        excludes = config.get('excludes', [])
+        for excluded_provider in excludes:
+            compatible_group.discard(excluded_provider.upper())
+        
+        # Add this group to the list
+        provider_groups.append(sorted(list(compatible_group)))
+    
+    # Remove duplicates by converting to tuples, using set, then back to lists
+    unique_groups = list(set(tuple(sorted(group)) for group in provider_groups))
+    
+    # Convert back to list of lists
+    result = [list(group) for group in unique_groups]
+    
+    return result
+    

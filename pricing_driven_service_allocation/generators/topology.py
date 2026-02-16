@@ -22,7 +22,8 @@ def topology(
     number_of_providers: Optional[int] = None,
     allowed_groups: Optional[List[int]] = None,
     number_of_devices: Optional[int] = None,
-    center_elevation: float = 0.0
+    center_elevation: float = 0.0,
+    options: Optional[dict] = {"seed": 1, "logs": True}
 ) -> Tuple[pd.DataFrame, str]:
     """
     Generate a sub-dataset of devices within a circular area and an HTML map
@@ -90,9 +91,10 @@ def topology(
 
     # Select number_of_devices random devices if specified
     if number_of_devices is not None and len(df_work) > number_of_devices:
-        df_work = df_work.sample(n=number_of_devices, random_state=None)
+      df_work = df_work.sample(n=number_of_devices, random_state=options.get("seed", 1))
     elif number_of_devices is not None and len(df_work) < number_of_devices:
-        print(f"Warning: Only {len(df_work)} devices found, but {number_of_devices} were requested.")
+        if options.get("logs", True):
+          print(f"Warning: Only {len(df_work)} devices found, but {number_of_devices} were requested.")
 
     # Remove the temporary distance column
     df_work = df_work.drop(columns=['distance_to_center'])
@@ -452,10 +454,11 @@ def topology(
     with open(metadata_path, 'w') as f:
         json.dump(metadata, f, indent=2)
 
-    print(f"Topology {topology_id} generated successfully!")
-    print(f"  - Devices selected: {len(df_work)}")
-    print(f"  - Providers: {len(unique_providers)} ({', '.join(unique_providers)})")
-    print(f"  - Groups: {sorted(df_work['global_group'].unique().tolist())}")
-    print(f"  - Files saved in: {topology_dir}")
+    if options.get("logs", True):
+      print(f"Topology {topology_id} generated successfully!")
+      print(f"  - Devices selected: {len(df_work)}")
+      print(f"  - Providers: {len(unique_providers)} ({', '.join(unique_providers)})")
+      print(f"  - Groups: {sorted(df_work['global_group'].unique().tolist())}")
+      print(f"  - Files saved in: {topology_dir}")
 
     return df_work, topology_id

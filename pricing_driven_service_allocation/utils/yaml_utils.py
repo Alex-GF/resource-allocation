@@ -4,6 +4,7 @@ Yaml Utilities Module
 This module provides functions to convert between YAML files and pricing proto objects.
 """
 
+from typing import Optional
 import yaml
 from google.protobuf import json_format
 
@@ -40,7 +41,7 @@ def yaml_to_pricing_proto(yaml_path: str, message_type):
 
     return message
 
-def pricing_proto_to_yaml(pricing_obj, yaml_path: str) -> None:
+def pricing_proto_to_yaml(pricing_obj, yaml_path: str, options: Optional[dict] = {}) -> None:
     """
     Save a Pricing Protocol Buffer object to a YAML file.
     
@@ -50,6 +51,9 @@ def pricing_proto_to_yaml(pricing_obj, yaml_path: str) -> None:
         The Pricing Protocol Buffer object to save.
     yaml_path : str
         Path where the YAML file will be saved.
+    options : dict, optional
+        Additional options for YAML generation.
+          - 'logs': bool, whether to print detailed logs during generation (default: True)
     """
     output_path = yaml_path
     with open(output_path, 'w', encoding='utf-8') as f:
@@ -60,4 +64,5 @@ def pricing_proto_to_yaml(pricing_obj, yaml_path: str) -> None:
             allow_unicode=True,
             sort_keys=False
         )
-    print(f"Generated pricing saved to: {output_path}")
+    if options.get('logs', True):
+        print(f"Generated pricing saved to: {output_path}")
