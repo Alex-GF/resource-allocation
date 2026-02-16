@@ -28,12 +28,85 @@ common_configs:
       radius: 15000
 
   client_polygons:
-    polygon_cbt: &polygon_cbt
-      - [ 144.95128085314013, -37.81311379425756 ]
-      - [ 144.954906094624, -37.82109949971801 ]
-      - [ 144.97481006469786, -37.81512407043976 ]
-      - [ 144.97090595848454, -37.807413124398344 ]
-      - [ 144.95128085314013, -37.81311379425756 ]
+    # --- AR/VR: CBD West ---
+    arvr_small: &poly_arvr_small
+      - [ 144.958786, -37.819197 ]
+      - [ 144.971622, -37.816199 ]
+      - [ 144.968309, -37.809276 ]
+      - [ 144.955681, -37.812056 ]
+      - [ 144.958786, -37.819197 ]
+    arvr_medium: &poly_arvr_medium
+      - [ 144.954839, -37.823310 ]
+      - [ 144.978200, -37.817853 ]
+      - [ 144.972170, -37.805253 ]
+      - [ 144.949188, -37.810312 ]
+      - [ 144.954839, -37.823310 ]
+    arvr_large: &poly_arvr_large
+      - [ 144.952337, -37.825918 ]
+      - [ 144.982372, -37.818901 ]
+      - [ 144.974619, -37.802702 ]
+      - [ 144.945070, -37.809206 ]
+      - [ 144.952337, -37.825918 ]
+
+    # --- Robot IoT: Docklands ---
+    robot_small: &poly_robot_small
+      - [ 144.933715, -37.821608 ]
+      - [ 144.931547, -37.831024 ]
+      - [ 144.951323, -37.833591 ]
+      - [ 144.953422, -37.824123 ]
+      - [ 144.933715, -37.821608 ]
+    robot_medium: &poly_robot_medium
+      - [ 144.926510, -37.816706 ]
+      - [ 144.922565, -37.833842 ]
+      - [ 144.958557, -37.838515 ]
+      - [ 144.962376, -37.821282 ]
+      - [ 144.926510, -37.816706 ]
+    robot_large: &poly_robot_large
+      - [ 144.921941, -37.813598 ]
+      - [ 144.916868, -37.835629 ]
+      - [ 144.963144, -37.841637 ]
+      - [ 144.968055, -37.819481 ]
+      - [ 144.921941, -37.813598 ]
+
+    # --- Lidar V2X: Malvern East ---
+    lidar_small: &poly_lidar_small
+      - [ 144.997839, -37.876387 ]
+      - [ 145.016214, -37.879339 ]
+      - [ 145.018326, -37.868429 ]
+      - [ 144.999466, -37.866632 ]
+      - [ 144.997839, -37.876387 ]
+    lidar_medium: &poly_lidar_medium
+      - [ 144.989539, -37.879413 ]
+      - [ 145.022981, -37.884786 ]
+      - [ 145.026825, -37.864930 ]
+      - [ 144.992499, -37.861659 ]
+      - [ 144.989539, -37.879413 ]
+    lidar_large: &poly_lidar_large
+      - [ 144.984276, -37.881332 ]
+      - [ 145.027272, -37.888240 ]
+      - [ 145.032215, -37.862711 ]
+      - [ 144.988082, -37.858506 ]
+      - [ 144.984276, -37.881332 ]
+
+    # --- Video Privacy: Parkville ---
+    video_small: &poly_video_small
+      - [ 144.951457, -37.803420 ]
+      - [ 144.969293, -37.805110 ]
+      - [ 144.971159, -37.793497 ]
+      - [ 144.952959, -37.792167 ]
+      - [ 144.951457, -37.803420 ]
+    video_medium: &poly_video_medium
+      - [ 144.943454, -37.807415 ]
+      - [ 144.975916, -37.810490 ]
+      - [ 144.979311, -37.789355 ]
+      - [ 144.946187, -37.786934 ]
+      - [ 144.943454, -37.807415 ]
+    video_large: &poly_video_large
+      - [ 144.938379, -37.809948 ]
+      - [ 144.980116, -37.813902 ]
+      - [ 144.984481, -37.786728 ]
+      - [ 144.941892, -37.783615 ]
+      - [ 144.938379, -37.809948 ]
 
   providers:
     providers_optus: &providers_optus
@@ -67,62 +140,62 @@ experiments:
   small:
     ar/vr:
       offer: { devices_density: *dens_small, zone: *center_melbourne, providers: *providers_optus }
-      demand: { clients_density: *dens_small, concurrency: *conc_arvr, zone: *polygon_cbt }
+      demand: { clients_density: *dens_small, concurrency: *conc_arvr, zone: *poly_arvr_small }
       request: { max_distance: *dist_arvr, budget: 1000, providers_to_consider: *req_telstra_optus }
 
     robot_iot:
       offer: { devices_density: *dens_small, zone: *center_melbourne, providers: *providers_optus }
-      demand: { clients_density: *dens_small, concurrency: *conc_robot, zone: *polygon_cbt }
+      demand: { clients_density: *dens_small, concurrency: *conc_robot, zone: *poly_robot_small }
       request: { max_distance: *dist_robot, budget: 1500, providers_to_consider: *req_telstra_optus }
 
     lidar:
       offer: { devices_density: *dens_small, zone: *center_melbourne, providers: *providers_optus }
-      demand: { clients_density: *dens_small, concurrency: *conc_lidar, zone: *polygon_cbt }
+      demand: { clients_density: *dens_small, concurrency: *conc_lidar, zone: *poly_lidar_small }
       request: { max_distance: *dist_lidar, budget: 800, providers_to_consider: *req_telstra_optus }
 
     video_privacy:
       offer: { devices_density: *dens_small, zone: *center_melbourne, providers: *providers_optus }
-      demand: { clients_density: *dens_small, concurrency: *conc_video, zone: *polygon_cbt }
+      demand: { clients_density: *dens_small, concurrency: *conc_video, zone: *poly_video_small }
       request: { max_distance: *dist_video, budget: 1200, providers_to_consider: *req_telstra_optus }
 
   medium:
     ar/vr:
       offer: { devices_density: *dens_medium, zone: *center_melbourne, providers: *providers_optus }
-      demand: { clients_density: *dens_medium, concurrency: *conc_arvr, zone: *polygon_cbt }
+      demand: { clients_density: *dens_medium, concurrency: *conc_arvr, zone: *poly_arvr_medium }
       request: { max_distance: *dist_arvr, budget: 1000, providers_to_consider: *req_telstra_optus }
 
     robot_iot:
       offer: { devices_density: *dens_medium, zone: *center_melbourne, providers: *providers_optus }
-      demand: { clients_density: *dens_medium, concurrency: *conc_robot, zone: *polygon_cbt }
+      demand: { clients_density: *dens_medium, concurrency: *conc_robot, zone: *poly_robot_medium }
       request: { max_distance: *dist_robot, budget: 1500, providers_to_consider: *req_telstra_optus }
 
     lidar:
       offer: { devices_density: *dens_medium, zone: *center_melbourne, providers: *providers_optus }
-      demand: { clients_density: *dens_medium, concurrency: *conc_lidar, zone: *polygon_cbt }
+      demand: { clients_density: *dens_medium, concurrency: *conc_lidar, zone: *poly_lidar_medium }
       request: { max_distance: *dist_lidar, budget: 800, providers_to_consider: *req_telstra_optus }
 
     video_privacy:
       offer: { devices_density: *dens_medium, zone: *center_melbourne, providers: *providers_optus }
-      demand: { clients_density: *dens_medium, concurrency: *conc_video, zone: *polygon_cbt }
+      demand: { clients_density: *dens_medium, concurrency: *conc_video, zone: *poly_video_medium }
       request: { max_distance: *dist_video, budget: 1200, providers_to_consider: *req_telstra_optus }
 
   large:
     ar/vr:
       offer: { devices_density: *dens_large, zone: *center_melbourne, providers: *providers_optus }
-      demand: { clients_density: *dens_large, concurrency: *conc_arvr, zone: *polygon_cbt }
+      demand: { clients_density: *dens_large, concurrency: *conc_arvr, zone: *poly_arvr_large }
       request: { max_distance: *dist_arvr, budget: 1000, providers_to_consider: *req_telstra_optus }
 
     robot_iot:
       offer: { devices_density: *dens_large, zone: *center_melbourne, providers: *providers_optus }
-      demand: { clients_density: *dens_large, concurrency: *conc_robot, zone: *polygon_cbt }
+      demand: { clients_density: *dens_large, concurrency: *conc_robot, zone: *poly_robot_large }
       request: { max_distance: *dist_robot, budget: 1500, providers_to_consider: *req_telstra_optus }
 
     lidar:
       offer: { devices_density: *dens_large, zone: *center_melbourne, providers: *providers_optus }
-      demand: { clients_density: *dens_large, concurrency: *conc_lidar, zone: *polygon_cbt }
+      demand: { clients_density: *dens_large, concurrency: *conc_lidar, zone: *poly_lidar_large }
       request: { max_distance: *dist_lidar, budget: 800, providers_to_consider: *req_telstra_optus }
 
     video_privacy:
       offer: { devices_density: *dens_large, zone: *center_melbourne, providers: *providers_optus }
-      demand: { clients_density: *dens_large, concurrency: *conc_video, zone: *polygon_cbt }
+      demand: { clients_density: *dens_large, concurrency: *conc_video, zone: *poly_video_large }
       request: { max_distance: *dist_video, budget: 1200, providers_to_consider: *req_telstra_optus }
