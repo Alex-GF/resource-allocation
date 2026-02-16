@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 
 from enum import Enum
@@ -95,12 +97,32 @@ def calculate_resources(
         'cpu_total_cores': int(round(cpu_total, 0))  # Cores usually counted in 0.5s or 1s
     }
 
+def draw_clients_on_map(
+    topology_id: str,
+    topologies_result_dir: str,
+    clients_file: str = "clients.csv",
+    map_file: str = "map.html"
+):
+    topology_dir = os.path.join(topologies_result_dir, topology_id)
+    html_path = os.path.join(topology_dir, map_file)
+    with open(html_path, 'w', encoding='utf-8') as f:
+        f.write("abcd")
+
 if __name__ == '__main__':
     import pandas as pd
     import os
     DATASET_RESULT_DIR = "synthetic-dataset/data"
+    TOPOLOGIES_RESULT_DIR = "synthetic-dataset/synthetic-topologies"
+    topology_id = "c28ad123-e113-460c-8723-ea71a59cbafe"
+    CLIENTS_FILE = "clients.csv"
+    MAP_FILE = "map_with_clients.html"
 
-    c_locations_df = pd.read_csv(os.path.join(DATASET_RESULT_DIR, "client_locations_filtered.csv"), index_col=0)
+    c_locations_df = pd.read_csv(os.path.join(TOPOLOGIES_RESULT_DIR, topology_id, CLIENTS_FILE), index_col=0)
+    draw_clients_on_map(topology_id, TOPOLOGIES_RESULT_DIR, map_file=MAP_FILE)
+
+
+    sys.exit()
+
 
     # --- Example Usage ---
 
