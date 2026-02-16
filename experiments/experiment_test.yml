@@ -18,97 +18,112 @@
 # | Video Privacy | N/A     | < 100m   | On-Prem 10GbE LAN. Physically air-gapped or firewall-geofenced within building.  |
 # -------------------------------------------------------------------------------------------------------------------------
 
-# TODO: Need to create this for all four application types
+common_configs:
+
+  topology_centers:
+    center_melbourne: &center_melbourne
+      lat: -37.8136
+      long: 144.9631
+      elevation: 0
+      radius: 15000
+
+  client_polygons:
+    polygon_cbt: &polygon_cbt
+      - [ 144.95128085314013, -37.81311379425756 ]
+      - [ 144.954906094624, -37.82109949971801 ]
+      - [ 144.97481006469786, -37.81512407043976 ]
+      - [ 144.97090595848454, -37.807413124398344 ]
+      - [ 144.95128085314013, -37.81311379425756 ]
+
+  providers:
+    providers_optus: &providers_optus
+      OPTUS:
+        excludes: [ TELSTRA ]
+        includes: [ VODAFONE ]
+
+  requests:
+    req_telstra_optus: &req_telstra_optus [ TELSTRA, OPTUS ]
+
+  concurrency_profiles:
+    conc_arvr: &conc_arvr 0.7
+    conc_robot: &conc_robot 0.4
+    conc_lidar: &conc_lidar 0.95
+    conc_video: &conc_video 0.2
+
+  scale_profiles:
+    dens_small: &dens_small 0.33
+    dens_medium: &dens_medium 0.66
+    dens_large: &dens_large 1.0
+
+  service_requirements:
+    dist_arvr: &dist_arvr 25
+    dist_robot: &dist_robot 50
+    dist_lidar: &dist_lidar 300
+    dist_video: &dist_video 100
+
+# TODO: Budget values are still arbitrary
 # TODO: Need to include the device information in the map.html
+# TODO: Need to include the device_density in the topology generation, which currently only accepts a number of devices, but no ration
 experiments:
   small:
     ar/vr:
-      offer:
-        # TODO: Need to include this in the topology generation, which currently only accepts a number of devices, but no ration
-        devices_density: 0.33
-        zone: # Circle
-          lat: -37.8136
-          long: 144.9631
-          elevation: 0
-          radius: 15000
-        providers:
-          OPTUS:
-            excludes:
-              - TELSTRA
-            includes:
-              - VODAFONE
-      demand:
-        clients_density: 0.33
-        concurrency: 0.7
-        zone: # Polygon
-          - [ 144.95128085314013, -37.81311379425756 ]
-          - [ 144.954906094624, -37.82109949971801 ]
-          - [ 144.97481006469786, -37.81512407043976 ]
-          - [ 144.97090595848454, -37.807413124398344 ]
-          - [ 144.95128085314013, -37.81311379425756 ]
-      request:
-        max_distance: 25
-        budget: 1000
-        providers_to_consider:
-          - TELSTRA
-          - OPTUS
+      offer: { devices_density: *dens_small, zone: *center_melbourne, providers: *providers_optus }
+      demand: { clients_density: *dens_small, concurrency: *conc_arvr, zone: *polygon_cbt }
+      request: { max_distance: *dist_arvr, budget: 1000, providers_to_consider: *req_telstra_optus }
+
+    robot_iot:
+      offer: { devices_density: *dens_small, zone: *center_melbourne, providers: *providers_optus }
+      demand: { clients_density: *dens_small, concurrency: *conc_robot, zone: *polygon_cbt }
+      request: { max_distance: *dist_robot, budget: 1500, providers_to_consider: *req_telstra_optus }
+
+    lidar:
+      offer: { devices_density: *dens_small, zone: *center_melbourne, providers: *providers_optus }
+      demand: { clients_density: *dens_small, concurrency: *conc_lidar, zone: *polygon_cbt }
+      request: { max_distance: *dist_lidar, budget: 800, providers_to_consider: *req_telstra_optus }
+
+    video_privacy:
+      offer: { devices_density: *dens_small, zone: *center_melbourne, providers: *providers_optus }
+      demand: { clients_density: *dens_small, concurrency: *conc_video, zone: *polygon_cbt }
+      request: { max_distance: *dist_video, budget: 1200, providers_to_consider: *req_telstra_optus }
+
   medium:
     ar/vr:
-      offer:
-        devices_density: 0.66
-        zone: # Circle
-          lat: -37.8136
-          long: 144.9631
-          elevation: 0
-          radius: 15000
-        providers:
-          OPTUS:
-            excludes:
-              - TELSTRA
-            includes:
-              - VODAFONE
-      demand:
-        clients_density: 0.66
-        concurrency: 0.7
-        zone: # Polygon
-          - [ 144.95128085314013, -37.81311379425756 ]
-          - [ 144.954906094624, -37.82109949971801 ]
-          - [ 144.97481006469786, -37.81512407043976 ]
-          - [ 144.97090595848454, -37.807413124398344 ]
-          - [ 144.95128085314013, -37.81311379425756 ]
-      request:
-        max_distance: 25
-        budget: 1000
-        providers_to_consider:
-          - TELSTRA
-          - OPTUS
+      offer: { devices_density: *dens_medium, zone: *center_melbourne, providers: *providers_optus }
+      demand: { clients_density: *dens_medium, concurrency: *conc_arvr, zone: *polygon_cbt }
+      request: { max_distance: *dist_arvr, budget: 1000, providers_to_consider: *req_telstra_optus }
+
+    robot_iot:
+      offer: { devices_density: *dens_medium, zone: *center_melbourne, providers: *providers_optus }
+      demand: { clients_density: *dens_medium, concurrency: *conc_robot, zone: *polygon_cbt }
+      request: { max_distance: *dist_robot, budget: 1500, providers_to_consider: *req_telstra_optus }
+
+    lidar:
+      offer: { devices_density: *dens_medium, zone: *center_melbourne, providers: *providers_optus }
+      demand: { clients_density: *dens_medium, concurrency: *conc_lidar, zone: *polygon_cbt }
+      request: { max_distance: *dist_lidar, budget: 800, providers_to_consider: *req_telstra_optus }
+
+    video_privacy:
+      offer: { devices_density: *dens_medium, zone: *center_melbourne, providers: *providers_optus }
+      demand: { clients_density: *dens_medium, concurrency: *conc_video, zone: *polygon_cbt }
+      request: { max_distance: *dist_video, budget: 1200, providers_to_consider: *req_telstra_optus }
+
   large:
     ar/vr:
-      offer:
-        devices_density: 1
-        zone: # Circle
-          lat: -37.8136
-          long: 144.9631
-          elevation: 0
-          radius: 15000
-        providers:
-          OPTUS:
-            excludes:
-              - TELSTRA
-            includes:
-              - VODAFONE
-      demand:
-        clients_density: 1
-        concurrency: 0.7
-        zone: # Polygon
-          - [ 144.95128085314013, -37.81311379425756 ]
-          - [ 144.954906094624, -37.82109949971801 ]
-          - [ 144.97481006469786, -37.81512407043976 ]
-          - [ 144.97090595848454, -37.807413124398344 ]
-          - [ 144.95128085314013, -37.81311379425756 ]
-      request:
-        max_distance: 25
-        budget: 1000
-        providers_to_consider:
-          - TELSTRA
-          - OPTUS
+      offer: { devices_density: *dens_large, zone: *center_melbourne, providers: *providers_optus }
+      demand: { clients_density: *dens_large, concurrency: *conc_arvr, zone: *polygon_cbt }
+      request: { max_distance: *dist_arvr, budget: 1000, providers_to_consider: *req_telstra_optus }
+
+    robot_iot:
+      offer: { devices_density: *dens_large, zone: *center_melbourne, providers: *providers_optus }
+      demand: { clients_density: *dens_large, concurrency: *conc_robot, zone: *polygon_cbt }
+      request: { max_distance: *dist_robot, budget: 1500, providers_to_consider: *req_telstra_optus }
+
+    lidar:
+      offer: { devices_density: *dens_large, zone: *center_melbourne, providers: *providers_optus }
+      demand: { clients_density: *dens_large, concurrency: *conc_lidar, zone: *polygon_cbt }
+      request: { max_distance: *dist_lidar, budget: 800, providers_to_consider: *req_telstra_optus }
+
+    video_privacy:
+      offer: { devices_density: *dens_large, zone: *center_melbourne, providers: *providers_optus }
+      demand: { clients_density: *dens_large, concurrency: *conc_video, zone: *polygon_cbt }
+      request: { max_distance: *dist_video, budget: 1200, providers_to_consider: *req_telstra_optus }
