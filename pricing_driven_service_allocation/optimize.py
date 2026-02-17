@@ -55,7 +55,7 @@ def optimize(
 
     # 1) Submit job (multipart/form-data)
     filters_json = json.dumps(request, ensure_ascii=False)
-
+    print(f"Submitting optimization job with filters:\n{json.dumps(json.loads(filters_json), indent=2)}")
     data = {
         "operation": "optimal",
         "solver": "minizinc",
@@ -64,17 +64,22 @@ def optimize(
     }
 
     with open(pricing_instance_path, "rb") as f:
-        files = {
-            # (filename, fileobj, content_type)
-            "pricingFile": ("pricing.yml", f, "application/x-yaml"),
-        }
-        submit_resp = http.post(post_url, data=data, files=files, timeout=30)
+      files = {
+        # (filename, fileobj, content_type)
+        "pricingFile": ("pricing.yml", f, "application/x-yaml"),
+      }
+      submit_resp = http.post(post_url, data=data, files=files, timeout=30)
+      try:
         submit_resp.raise_for_status()
+      except requests.HTTPError as e:
+        if submit_resp.status_code >= 400:
+          print(f"Error {submit_resp.status_code}: {submit_resp.text}")
+        raise
 
     submit_payload = submit_resp.json()
     job_id = submit_payload.get("jobId")
     if not job_id:
-        raise ValueError(f"Missing 'jobId' in job creation response: {submit_payload}")
+      raise ValueError(f"Missing 'jobId' in job creation response: {submit_payload}")
 
     # 2) Poll job status until COMPLETED or FAILED
     get_url = f"{base}/pricing/analysis/{job_id}"

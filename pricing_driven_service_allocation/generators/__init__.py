@@ -16,6 +16,7 @@ from .topology import topology
 from .pricing import pricing_from_topology, compatible_provider_groups_from_offer
 from .problem_instance import problem_instance
 from . import client_demand
+from .request import request
 
 __all__ = [
     # Topology Generator
@@ -30,4 +31,7 @@ __all__ = [
 
     # Demand Generator
     'client_demand',
+    
+    # Request Builder
+    'request',
 ]
