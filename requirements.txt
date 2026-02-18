@@ -25,8 +25,9 @@ pandas==2.3.3
 parso==0.8.5
 pexpect==4.9.0
 platformdirs==4.5.1
+-e git+https://github.com/Alex-GF/services-allocation.git@1162eb812a7d22f3a63beb4c99ebf8e3c58e109a#egg=pricing_driven_service_allocation
 prompt_toolkit==3.0.52
-protobuf==6.33.2
+protobuf==6.33.4
 psutil==7.1.3
 ptyprocess==0.7.0
 pure_eval==0.2.3
@@ -36,10 +37,11 @@ pytz==2025.2
 PyYAML==6.0.3
 pyzmq==27.1.0
 requests==2.32.5
-shapely>=1.8.0
+shapely==2.1.2
 six==1.17.0
 stack-data==0.6.3
 tornado==6.5.3
+tqdm==4.67.3
 traitlets==5.14.3
 tzdata==2025.3
 urllib3==2.6.2

@@ -1,248 +1,324 @@
-import csv
-import json
-import os
-import re
-import sys
+import numpy as np
+import math
+from typing import Dict, Any, Optional
 from enum import Enum
-from typing import List
 
 import numpy as np
-import pandas as pd
-
-
 class AppType(Enum):
-    AR_VR = "ar/vr"
-    VIDEO_PRIVACY = "video_privacy"
+    AR_VR = "vr"
+    VIDEO_PRIVACY = "cctv"
     LIDAR = "lidar"
-    ROBOT_IOT = "robot_iot"
+    ROBOT_IOT = "robot"
 
 
 def calculate_resources(
-        n_clients: int,
-        service_type: AppType,
-        concurrency: float = 1.0,
-        random_state: int = 35
-):
-    """
-    Calculates resource demand for specific Smart Environment services.
+    n_clients: int,
+    service_type,  # AppType
+    *,
+    concurrency: float,
+    requests_per_second_per_active_client: float,
+    resources_to_consider: list[str],
+    requests_per_second_std: float = 0.15,
+    random_state: Optional[int] = 35,
+    resource_mapping: Optional[Dict[str, str]] = None,
+) -> Dict[str, Any]:
 
-    Args:
-        n_clients: Number of potential clients in the polygon.
-        service_type: One of 'ar_vr', 'video_privacy', 'lidar', 'robot_iot'.
-        concurrency: 0.0 to 1.0 (percent of clients active simultaneously).
-        random_state: Seed for reproducibility (or None for random variation).
+    n_clients = int(n_clients)
+    if n_clients < 0:
+        raise ValueError("n_clients must be non-negative")
+    if not (0.0 <= concurrency <= 1.0):
+        raise ValueError("concurrency must be between 0.0 and 1.0")
+    if requests_per_second_per_active_client < 0.0:
+        raise ValueError("requests_per_second_per_active_client must be non-negative")
+    if requests_per_second_std < 0.0:
+        raise ValueError("requests_per_second_std must be non-negative")
 
-    Returns:
-        dict: A Resource Vector (Bandwidth, Compute, Storage, Energy)
-    """
-
-    # Initialize Random Generator
     rng = np.random.default_rng(random_state)
 
-    # 1. Define Service Profiles
-    # These represent the resources required PER ACTIVE USER on the Edge Node.
+    # Profiles (recalibrated)
+    # Key changes:
+    # - per-session RAM is tiny (or zero) unless your domain requires it
+    # - shared RAM scales sub-linearly with active users
+    # - GPU/TPU are used only by a fraction of requests
     profiles = {
-        AppType.AR_VR: {
-            # Heavy Rendering: Needs VRAM and huge GPU compute.
-            'ram_gb_avg': 8.0, 'ram_std': 0.5,  # Low deviation (assets are fixed size)
-            'gpu_tflops_avg': 4.0, 'gpu_std': 1.5,  # High variance (scene complexity varies)
-            'cpu_cores_avg': 2.0, 'cpu_std': 0.5,  # Draw calls / physics
+        service_type.__class__.AR_VR: {
+            "base_ram_gb": 1.5,
+            "base_storage_gb": 2.0,
+
+            # Small per-session resident state (do NOT assume linear heavy session RAM)
+            "session_ram_gb_avg": 0.002, "session_ram_gb_std": 0.001,  # ~2 MB
+            "session_storage_gb_avg": 0.005, "session_storage_gb_std": 0.003,
+
+            # Shared memory component (cache, assets, pipelines) — sub-linear scaling
+            "shared_ram_gb_at_100_active": 2.0,   # tuning knob
+            "shared_ram_growth": "sqrt",          # "sqrt" or "log"
+
+            # Per-request processing
+            "cpu_ms_per_request_avg": 3.0, "cpu_ms_per_request_std": 1.0,
+            "gpu_ms_per_request_avg": 6.0, "gpu_ms_per_request_std": 2.0,
+            "tpu_ms_per_request_avg": 0.0, "tpu_ms_per_request_std": 0.2,
+
+            # Fraction of requests that actually hit the accelerator
+            "gpu_request_fraction": 0.25,
+            "tpu_request_fraction": 0.0,
+
+            "target_cpu_utilization": 0.65,
+            "target_gpu_utilization": 0.75,
+            "target_tpu_utilization": 0.75,
+            "safety_factor": 1.15,
+
+            "log_megabytes_per_request": 0.01,
+            "retention_seconds": 1800,
+            "network_megabytes_in_per_request": 0.10,
+            "network_megabytes_out_per_request": 0.20,
+
+            # Accelerator capacity (abstract throughput)
+            "gpu_capacity_seconds_per_second": 120.0,
+            "tpu_capacity_seconds_per_second": 200.0,
         },
-        AppType.VIDEO_PRIVACY: {
-            # AI Inference: High GPU Tensor usage, low CPU/RAM relative to AR.
-            'ram_gb_avg': 2.0, 'ram_std': 0.1,  # Model weights are fixed size
-            'gpu_tflops_avg': 2.5, 'gpu_std': 0.5,  # Steady stream inference
-            'cpu_cores_avg': 1.0, 'cpu_std': 0.2,  # Pre-processing frames
+
+        service_type.__class__.VIDEO_PRIVACY: {
+            "base_ram_gb": 1.2,
+            "base_storage_gb": 10.0,
+
+            "session_ram_gb_avg": 0.001, "session_ram_gb_std": 0.001,  # ~1 MB
+            "session_storage_gb_avg": 0.01, "session_storage_gb_std": 0.01,
+
+            "shared_ram_gb_at_100_active": 1.5,
+            "shared_ram_growth": "sqrt",
+
+            "cpu_ms_per_request_avg": 2.0, "cpu_ms_per_request_std": 0.8,
+            "gpu_ms_per_request_avg": 8.0, "gpu_ms_per_request_std": 3.0,
+            "tpu_ms_per_request_avg": 4.0, "tpu_ms_per_request_std": 2.0,
+
+            "gpu_request_fraction": 0.40,  # more inference-heavy
+            "tpu_request_fraction": 0.15,  # only some routed to TPU
+
+            "target_cpu_utilization": 0.65,
+            "target_gpu_utilization": 0.75,
+            "target_tpu_utilization": 0.75,
+            "safety_factor": 1.20,
+
+            "log_megabytes_per_request": 0.05,
+            "retention_seconds": 7200,
+            "network_megabytes_in_per_request": 0.30,
+            "network_megabytes_out_per_request": 0.05,
+
+            "gpu_capacity_seconds_per_second": 160.0,
+            "tpu_capacity_seconds_per_second": 250.0,
         },
-        AppType.LIDAR: {
-            # Data Intensive: High RAM to buffer point clouds, Moderate CPU for I/O.
-            'ram_gb_avg': 4.0, 'ram_std': 0.2,  # Buffering frames
-            'gpu_tflops_avg': 1.0, 'gpu_std': 0.4,  # Filtering/Alignment
-            'cpu_cores_avg': 1.5, 'cpu_std': 0.3,  # Spatial indexing
+
+        service_type.__class__.LIDAR: {
+            "base_ram_gb": 1.0,
+            "base_storage_gb": 5.0,
+
+            "session_ram_gb_avg": 0.002, "session_ram_gb_std": 0.001,
+            "session_storage_gb_avg": 0.05, "session_storage_gb_std": 0.03,
+
+            "shared_ram_gb_at_100_active": 1.2,
+            "shared_ram_growth": "sqrt",
+
+            "cpu_ms_per_request_avg": 5.0, "cpu_ms_per_request_std": 2.0,
+            "gpu_ms_per_request_avg": 4.0, "gpu_ms_per_request_std": 2.0,
+            "tpu_ms_per_request_avg": 2.0, "tpu_ms_per_request_std": 1.5,
+
+            "gpu_request_fraction": 0.20,
+            "tpu_request_fraction": 0.10,
+
+            "target_cpu_utilization": 0.60,
+            "target_gpu_utilization": 0.75,
+            "target_tpu_utilization": 0.75,
+            "safety_factor": 1.20,
+
+            "log_megabytes_per_request": 0.02,
+            "retention_seconds": 3600,
+            "network_megabytes_in_per_request": 0.20,
+            "network_megabytes_out_per_request": 0.10,
+
+            "gpu_capacity_seconds_per_second": 140.0,
+            "tpu_capacity_seconds_per_second": 220.0,
         },
-        AppType.ROBOT_IOT: {
-            # Lightweight: Minimal resources, mostly message passing.
-            'ram_gb_avg': 0.2, 'ram_std': 0.01,  # Very stable tiny footprint
-            'gpu_tflops_avg': 0.05, 'gpu_std': 0.01,  # Occasional path planning
-            'cpu_cores_avg': 0.1, 'cpu_std': 0.05,  # Background threads
-        }
+
+        service_type.__class__.ROBOT_IOT: {
+            "base_ram_gb": 0.3,
+            "base_storage_gb": 1.0,
+
+            "session_ram_gb_avg": 0.0002, "session_ram_gb_std": 0.0001,  # 0.2 MB
+            "session_storage_gb_avg": 0.001, "session_storage_gb_std": 0.001,
+
+            "shared_ram_gb_at_100_active": 0.3,
+            "shared_ram_growth": "log",
+
+            "cpu_ms_per_request_avg": 0.8, "cpu_ms_per_request_std": 0.4,
+            "gpu_ms_per_request_avg": 0.0, "gpu_ms_per_request_std": 0.2,
+            "tpu_ms_per_request_avg": 0.0, "tpu_ms_per_request_std": 0.2,
+
+            "gpu_request_fraction": 0.0,
+            "tpu_request_fraction": 0.0,
+
+            "target_cpu_utilization": 0.70,
+            "target_gpu_utilization": 0.80,
+            "target_tpu_utilization": 0.80,
+            "safety_factor": 1.10,
+
+            "log_megabytes_per_request": 0.002,
+            "retention_seconds": 86400,
+            "network_megabytes_in_per_request": 0.01,
+            "network_megabytes_out_per_request": 0.01,
+
+            "gpu_capacity_seconds_per_second": 200.0,
+            "tpu_capacity_seconds_per_second": 300.0,
+        },
     }
 
     if service_type not in profiles:
         raise ValueError(f"Service type must be one of {list(profiles.keys())}")
 
-    profile = profiles[service_type]
+    p = profiles[service_type]
 
-    # 2. Determine Active Users
-    # We use a Binomial distribution to simulate how many are actually active
-    # (More accurate than just n * concurrency)
-    n_active = rng.binomial(n=n_clients, p=concurrency)
+    default_offer_to_internal = {
+        "available_ram_gb": "ram_total_gb",
+        "available_storage_gb": "storage_total_gb",
+        "available_cpu_cores": "cpu_total_cores",
+        "available_gpu_units": "gpu_equivalent_units",
+        "available_tpu_units": "tpu_equivalent_units",
+        "available_network_in_mbps": "network_megabits_in_per_second",
+        "available_network_out_mbps": "network_megabits_out_per_second",
+    }
+    if resource_mapping is None:
+        resource_mapping = default_offer_to_internal
+    else:
+        merged = dict(default_offer_to_internal)
+        merged.update(resource_mapping)
+        resource_mapping = merged
+
+    # 1) Active users
+    n_active = int(rng.binomial(n=n_clients, p=concurrency))
 
     if n_active == 0:
-        return {'active_users': 0, 'ram_total_gb': 0, 'gpu_total_tflops': 0, 'cpu_total_cores': 0}
+        internal = {
+            "ram_total_gb": 0,
+            "storage_total_gb": 0,
+            "cpu_total_cores": 0,
+            "gpu_equivalent_units": 0,
+            "tpu_equivalent_units": 0,
+            "network_megabits_in_per_second": 0.0,
+            "network_megabits_out_per_second": 0.0,
+        }
+        resources = {res: internal.get(resource_mapping.get(res, ""), 0) for res in resources_to_consider}
+        return {
+            "service_mode": service_type,
+            "active_users": 0,
+            "total_requests_per_second": 0.0,
+            **internal,
+            "resources": resources,
+        }
 
-    # 3. Calculate Resources (Stochastic)
+    # 2) Aggregate request rate
+    rps_per_user = rng.normal(
+        loc=requests_per_second_per_active_client,
+        scale=requests_per_second_std * max(requests_per_second_per_active_client, 1e-9),
+        size=n_active,
+    )
+    rps_per_user = np.maximum(rps_per_user, 0.0)
+    total_rps = float(rps_per_user.sum()) * p["safety_factor"]
 
-    # RAM (Low Deviation)
-    # We clip at 0.1 to ensure no user takes 0 RAM (impossible)
-    ram_demand = rng.normal(profile['ram_gb_avg'], profile['ram_std'], n_active)
-    ram_total = np.maximum(ram_demand, 0.1).sum()
+    # 3) RAM and storage
+    session_ram = rng.normal(p["session_ram_gb_avg"], p["session_ram_gb_std"], n_active)
+    session_ram = float(np.maximum(session_ram, 0.0).sum())
 
-    # GPU (High Variance usually)
-    gpu_demand = rng.normal(profile['gpu_tflops_avg'], profile['gpu_std'], n_active)
-    gpu_total = np.maximum(gpu_demand, 0.0).sum()
+    session_storage = rng.normal(p["session_storage_gb_avg"], p["session_storage_gb_std"], n_active)
+    session_storage = float(np.maximum(session_storage, 0.0).sum())
 
-    # CPU
-    cpu_demand = rng.normal(profile['cpu_cores_avg'], profile['cpu_std'], n_active)
-    cpu_total = np.maximum(cpu_demand, 0.1).sum()
+    # Shared RAM term
+    shared_at_100 = float(p.get("shared_ram_gb_at_100_active", 0.0))
+    growth = p.get("shared_ram_growth", "sqrt")
 
-    return {
-        'service_mode': service_type,
-        'active_users': n_active,
-        'ram_total_gb': int(round(ram_total, 0)),
-        'gpu_total_tflops': int(round(gpu_total, 0)),
-        'cpu_total_cores': int(round(cpu_total, 0))  # Cores usually counted in 0.5s or 1s
+    if shared_at_100 <= 0.0:
+        shared_ram = 0.0
+    else:
+        if growth == "log":
+            # log1p(100) scaling anchor
+            shared_ram = shared_at_100 * (math.log1p(n_active) / max(math.log1p(100), 1e-9))
+        else:
+            # sqrt scaling anchor
+            shared_ram = shared_at_100 * (math.sqrt(n_active) / max(math.sqrt(100), 1e-9))
+
+    ram_total_gb = (p["base_ram_gb"] + shared_ram + session_ram) * p["safety_factor"]
+    storage_total_gb = (p["base_storage_gb"] + session_storage) * p["safety_factor"]
+
+    # 4) Processing -> sizing
+    def ms_to_s(ms: float) -> float:
+        return float(ms) / 1000.0
+
+    cpu_ms = max(0.0, float(rng.normal(p["cpu_ms_per_request_avg"], p["cpu_ms_per_request_std"])))
+    gpu_ms = max(0.0, float(rng.normal(p["gpu_ms_per_request_avg"], p["gpu_ms_per_request_std"])))
+    tpu_ms = max(0.0, float(rng.normal(p["tpu_ms_per_request_avg"], p["tpu_ms_per_request_std"])))
+
+    # Fraction of requests that use accelerators
+    gpu_frac = float(p.get("gpu_request_fraction", 0.0))
+    tpu_frac = float(p.get("tpu_request_fraction", 0.0))
+    gpu_frac = min(max(gpu_frac, 0.0), 1.0)
+    tpu_frac = min(max(tpu_frac, 0.0), 1.0)
+
+    cpu_seconds_per_second = total_rps * ms_to_s(cpu_ms)
+    gpu_seconds_per_second = total_rps * gpu_frac * ms_to_s(gpu_ms)
+    tpu_seconds_per_second = total_rps * tpu_frac * ms_to_s(tpu_ms)
+
+    cpu_cores = cpu_seconds_per_second / p["target_cpu_utilization"]
+
+    gpu_capacity = float(p.get("gpu_capacity_seconds_per_second", 1.0))
+    tpu_capacity = float(p.get("tpu_capacity_seconds_per_second", 1.0))
+
+    gpu_units = 0.0
+    if gpu_seconds_per_second > 0.0 and gpu_capacity > 0.0:
+        gpu_units = gpu_seconds_per_second / (gpu_capacity * p["target_gpu_utilization"])
+
+    tpu_units = 0.0
+    if tpu_seconds_per_second > 0.0 and tpu_capacity > 0.0:
+        tpu_units = tpu_seconds_per_second / (tpu_capacity * p["target_tpu_utilization"])
+
+    # 5) Logs with retention
+    log_gb = 0.0
+    if p["log_megabytes_per_request"] > 0.0 and p["retention_seconds"] > 0.0:
+        log_megabytes = total_rps * p["log_megabytes_per_request"] * p["retention_seconds"]
+        log_gb = (log_megabytes / 1024.0) * p["safety_factor"]
+        storage_total_gb += log_gb
+
+    # 6) Network
+    net_in_mbps = float(total_rps * p["network_megabytes_in_per_request"] * 8.0) * p["safety_factor"]
+    net_out_mbps = float(total_rps * p["network_megabytes_out_per_request"] * 8.0) * p["safety_factor"]
+
+    internal = {
+        "ram_total_gb": int(math.ceil(ram_total_gb)),
+        "cpu_total_cores": int(math.ceil(cpu_cores)),
+        "gpu_equivalent_units": int(math.ceil(gpu_units)),
+        "tpu_equivalent_units": int(math.ceil(tpu_units)),
+        "storage_total_gb": int(math.ceil(storage_total_gb)),
+        "network_megabits_in_per_second": round(net_in_mbps, 3),
+        "network_megabits_out_per_second": round(net_out_mbps, 3),
     }
 
+    resources: Dict[str, Any] = {}
+    for res in resources_to_consider:
+        internal_key = resource_mapping.get(res)
+        resources[res] = internal.get(internal_key, 0) if internal_key else 0
 
-def draw_clients_on_map(
-        topology_id: str,
-        topologies_result_dir: str,
-        client_polygon: List[List[float]],
-        clients_file: str = "clients.csv",
-        map_source_file: str = "map.html",
-        map_target_file: str = "map.html"
-):
-    """
-    Injects client coordinates and a boundary polygon into an existing map.
-    """
-    topology_dir = os.path.join(topologies_result_dir, topology_id)
-    map_source_path = os.path.join(topology_dir, map_source_file)
-    map_target_path = os.path.join(topology_dir, map_target_file)
-    clients_path = os.path.join(topologies_result_dir, topology_id, clients_file)
+    return {
+        "service_mode": service_type,
+        "active_users": n_active,
+        "total_requests_per_second": round(total_rps, 3),
+        **internal,
+        "resources": resources,
 
-    # 1. Process Polygon (Convert [lon, lat] -> [lat, lon] for Leaflet)
-    leaflet_polygon = [[p[1], p[0]] for p in client_polygon]
-
-    # 2. Read and parse CSV data
-    clients = []
-    try:
-        with open(clients_path, mode='r') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                clients.append({
-                    "latitude": float(row['latitude']),
-                    "longitude": float(row['longitude'])
-                })
-    except Exception as e:
-        return f"Error reading CSV: {e}"
-
-    # 3. Read the existing HTML file
-    if not os.path.exists(map_source_path):
-        return "Source HTML file not found."
-
-    with open(map_source_path, 'r', encoding='utf-8') as f:
-        content = f.read()
-
-    # 4. Inject 'clients' and 'polygon' data into JavaScript
-    data_injection = (
-        f"const clients = {json.dumps(clients, indent=4)};\n        "
-        f"const clientAreaCoords = {json.dumps(leaflet_polygon)};\n        "
-    )
-    content = content.replace("const devices =", f"{data_injection}const devices =")
-
-    # 5. Update Legend (Added 'Client Area' with a fill style)
-    client_legend = """
-            <hr style="margin: 8px 0; border: 0; border-top: 1px solid #eee;">
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #FFD700; border: 1px solid #000; border-radius: 0;"></div>
-                <span style="font-weight: bold;">CLIENTS</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: rgba(255, 215, 0, 0.2); border: 2px solid #FFD700; border-radius: 2px;"></div>
-                <span>Client Area</span>
-            </div>
-        </div>"""
-    content = re.sub(r'</div>\s*</div>\s*<script>', f'{client_legend}\n    </div>\n    <script>', content)
-
-    # 6. Inject Drawing Logic (Polygon + Markers)
-    # We place the polygon drawing inside renderMarkers so it persists on filter changes
-    drawing_logic = """
-            let visible = 0;
-
-            // Draw Client Polygon Area
-            if (typeof clientAreaCoords !== 'undefined') {
-                const poly = L.polygon(clientAreaCoords, {
-                    color: '#FFD700',
-                    weight: 2,
-                    fillColor: '#FFD700',
-                    fillOpacity: 0.15,
-                    dashArray: '5, 5'
-                }).addTo(markerLayer);
-                markers.push(poly);
-            }
-
-            // Plot Clients
-            // Plot Clients as Squares
-            clients.forEach((c, idx) => {
-                const squareIcon = L.divIcon({
-                    className: 'custom-square-marker',
-                    html: `<div style="width: 10px; height: 10px; background-color: #FFD700; border: 1px solid #000;"></div>`,
-                    iconSize: [10, 10],
-                    iconAnchor: [5, 5]
-                });
-
-                const m = L.marker([c.latitude, c.longitude], { icon: squareIcon })
-                           .bindPopup(`<strong>Client #${idx + 1}</strong>`)
-                           .addTo(markerLayer);
-                markers.push(m);
-                visible += 1;
-            });
-    """
-    content = content.replace("let visible = 0;", drawing_logic)
-
-    # 7. Update Header/Description
-    content = content.replace("<h1>🗺️ Device Topology</h1>", "<h1>🗺️ Device & Client Topology</h1>")
-    content = content.replace("Total: 1098", f"Total: {1098 + len(clients)}")
-
-    # 8. Save updated map
-    with open(map_target_path, 'w', encoding='utf-8') as f:
-        f.write(content)
-
-    return f"Successfully updated map with polygon saved to: {map_target_path}"
-
-
-if __name__ == '__main__':
-
-    DATASET_RESULT_DIR = "synthetic-dataset/data"
-    TOPOLOGIES_RESULT_DIR = "synthetic-dataset/synthetic-topologies"
-    topology_id = "c28ad123-e113-460c-8723-ea71a59cbafe"
-    CLIENTS_FILE = "clients.csv"
-    MAP_FILE = "map_with_clients.html"
-
-    CLIENT_POLYGON = [[144.95128085314013, -37.81311379425756], [144.954906094624, -37.82109949971801],
-                      [144.97481006469786, -37.81512407043976], [144.97090595848454, -37.807413124398344],
-                      [144.95128085314013, -37.81311379425756]]
-
-    c_locations_df = pd.read_csv(os.path.join(TOPOLOGIES_RESULT_DIR, topology_id, CLIENTS_FILE), index_col=0)
-    draw_clients_on_map(topology_id, TOPOLOGIES_RESULT_DIR, CLIENT_POLYGON, map_target_file=MAP_FILE)
-
-    sys.exit()
-
-    # --- Example Usage ---
-
-    n_clients = len(c_locations_df)
-
-    # 1. 50 People doing AR (Gaming event)
-    ar_reqs = calculate_resources(n_clients=n_clients, service_type=AppType.AR_VR, concurrency=0.7)
-    print("AR Requirements:", ar_reqs, "\n")
-
-    # 2. 50 Security Cameras (Privacy Mode)
-    vid_reqs = calculate_resources(n_clients=n_clients, service_type=AppType.VIDEO_PRIVACY, concurrency=1.0)
-    print("Privacy Video Requirements:", vid_reqs, "\n")
-
-    vid_reqs = calculate_resources(n_clients=n_clients, service_type=AppType.LIDAR, concurrency=0.4)
-    print("Lidar Requirements:", vid_reqs, "\n")
-
-    vid_reqs = calculate_resources(n_clients=n_clients, service_type=AppType.ROBOT_IOT, concurrency=0.9)
-    print("Robot/IoT Requirements:", vid_reqs)
+        # Diagnostics
+        "cpu_seconds_per_second": round(cpu_seconds_per_second, 6),
+        "gpu_seconds_per_second": round(gpu_seconds_per_second, 6),
+        "tpu_seconds_per_second": round(tpu_seconds_per_second, 6),
+        "gpu_request_fraction": gpu_frac,
+        "tpu_request_fraction": tpu_frac,
+        "gpu_capacity_seconds_per_second": gpu_capacity,
+        "tpu_capacity_seconds_per_second": tpu_capacity,
+        "shared_ram_component_gb": round(shared_ram, 3),
+        "session_ram_component_gb": round(session_ram, 3),
+    }
