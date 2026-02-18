@@ -7,6 +7,8 @@ from .transform import (
     assign_device_resources
 )
 
+from .save_results import save_results_to_csv
+
 __all__ = [
     # Data Loading
     'load_devices_dataframe',
@@ -15,4 +17,7 @@ __all__ = [
     # Data Transformation
     'filter_devices_by_vendors',
     'assign_device_resources',
+    
+    # Save results to CSV
+    'save_results_to_csv'
 ]

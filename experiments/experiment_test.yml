@@ -18,141 +18,468 @@
 # | Video Privacy | N/A     | < 100m   | On-Prem 10GbE LAN. Physically air-gapped or firewall-geofenced within building.  |
 # -------------------------------------------------------------------------------------------------------------------------
 
+common_configs:
+  topology_centers:
+    center_melbourne: &center_melbourne
+      lat: -37.8136
+      long: 144.9631
+      elevation: 0
+      radius: 15000
+    sunbury: &sunbury
+      lat: -37.57828935077354
+      long: 144.72584756258118
+      elevation: 0
+      radius: 25000
+
+  providers: &providers
+    OPTUS:
+      excludes:
+        - TELSTRA
+      includes:
+        - VODAFONE
+    TELSTRA:
+      includes:
+        - VODAFONE
+    VODAFONE:
+      includes:
+        - OPTUS
+        - TELSTRA
+    TELECOM:
+      includes:
+        - OPTUS
+        - TELSTRA
+    MACQUARIE:
+      includes:
+        - VODAFONE
+        - TELSTRA
+      excludes:
+        - OPTUS
+
+  offer_profiles:
+    # Topology size per scenario scale (small, medium, large)
+    max_devices_small: &max_devices_small 100
+    max_devices_medium: &max_devices_medium 300
+    max_devices_large: &max_devices_large 500
+
+  demand_profiles:
+    # Clients density by scenario scale (small, medium, large)
+    n_clients_vr_small: &n_clients_vr_small 80
+    n_clients_robot_small: &n_clients_robot_small 60
+    n_clients_lidar_small: &n_clients_lidar_small 200
+    n_clients_video_small: &n_clients_video_small 80
+    n_clients_vr_medium: &n_clients_vr_medium 800
+    n_clients_robot_medium: &n_clients_robot_medium 300
+    n_clients_lidar_medium: &n_clients_lidar_medium 2000
+    n_clients_video_medium: &n_clients_video_medium 400
+    n_clients_vr_large: &n_clients_vr_large 8000
+    n_clients_robot_large: &n_clients_robot_large 1000
+    n_clients_lidar_large: &n_clients_lidar_large 5000
+    n_clients_video_large: &n_clients_video_large 1500
+    # Clients concurrency by scenario type (AR/VR, Robot IoT, Lidar V2X, Video Privacy)
+    conc_arvr: &conc_arvr 0.1
+    conc_robot: &conc_robot 0.4
+    conc_lidar: &conc_lidar 0.4
+    conc_video: &conc_video 0.7
+    # (TODO) Clients requests per second per active client per scenario type (AR/VR, Robot IoT, Lidar V2X, Video Privacy)
+    reqs_per_sec_arvr: &reqs_per_sec_arvr 2.0
+    reqs_per_sec_robot: &reqs_per_sec_robot 1.5
+    reqs_per_sec_lidar: &reqs_per_sec_lidar 3.0
+    reqs_per_sec_video: &reqs_per_sec_video 1.0
+    reqs_per_sec_std_arvr: &reqs_per_sec_std_arvr 0.15
+    reqs_per_sec_std_robot: &reqs_per_sec_std_robot 0.15
+    reqs_per_sec_std_lidar: &reqs_per_sec_std_lidar 0.15
+    reqs_per_sec_std_video: &reqs_per_sec_std_video 0.15
+
+  client_polygons:
+    # --- AR/VR: CBD West ---
+    arvr_small:
+      &poly_arvr_small [
+        [144.958786, -37.819197],
+        [144.971622, -37.816199],
+        [144.968309, -37.809276],
+        [144.955681, -37.812056],
+        [144.958786, -37.819197],
+      ]
+    arvr_medium:
+      &poly_arvr_medium [
+        [144.9348655064574, -37.80881672338305],
+        [144.9449794867981, -37.83416966770616],
+        [144.9957310678098, -37.82328222492373],
+        [144.98334317244974, -37.797246124203205],
+        [144.9348655064574, -37.80881672338305],
+      ]
+    arvr_large:
+      &poly_arvr_large [
+        [144.81803059335385, -37.795479996202936],
+        [144.85084771711473, -37.89665994752354],
+        [145.08808662405545, -37.850432830451425],
+        [145.0478721510081, -37.7457987983954],
+        [144.81803059335385, -37.795479996202936],
+      ]
+
+    # --- Robot IoT: Port Melbourne ---
+    robot_small:
+      &poly_robot_small [
+        [144.90777612412427, -37.84295562974569],
+        [144.91258915723552, -37.84944338460331],
+        [144.91700365894286, -37.8473131399776],
+        [144.9122212820928, -37.84104308562159],
+        [144.90777612412427, -37.84295562974569],
+      ]
+    robot_medium:
+      &poly_robot_medium [
+        [144.89932708874636, -37.833155133928834],
+        [144.89758629011368, -37.83854663544953],
+        [144.90608548343414, -37.85250879238704],
+        [144.9170764081294, -37.84733393829549],
+        [144.9125708116697, -37.84140397148961],
+        [144.91216121199295, -37.83501524647479],
+        [144.89932708874636, -37.833155133928834],
+      ]
+    robot_large:
+      &poly_robot_large [
+        [144.90610077717167, -37.85247324506703],
+        [144.92658252866818, -37.84301535533902],
+        [144.93487355543266, -37.82118588272289],
+        [144.92133805315876, -37.81944980497583],
+        [144.90383301829888, -37.82331266994538],
+        [144.8957544636139, -37.83545968916759],
+        [144.90610077717167, -37.85247324506703],
+      ]
+
+    # --- Lidar V2X: Sunbury ---
+    lidar_small:
+      &poly_lidar_small [
+        [144.7612704163953, -37.564915934457545],
+        [144.76001476558247, -37.582906004702345],
+        [144.78788285819297, -37.58642849763323],
+        [144.79085654323978, -37.568738628973044],
+        [144.7612704163953, -37.564915934457545],
+      ]
+    lidar_medium:
+      &poly_lidar_medium [
+        [144.79119990510475, -37.54018057806281],
+        [144.7129693619981, -37.5381052099969],
+        [144.70981450999932, -37.59917706255196],
+        [144.7866490044542, -37.59998609396243],
+        [144.79119990510475, -37.54018057806281],
+      ]
+    lidar_large:
+      &poly_lidar_large [
+        [144.6633638729599, -37.52557542496938],
+        [144.6568075943983, -37.60920166693431],
+        [144.7888552861519, -37.60915104078283],
+        [144.79503569063547, -37.526578239814285],
+        [144.6633638729599, -37.52557542496938],
+      ]
+
+    # --- Video Privacy: Royal Melbourne Hospital & Parkville ---
+    video_small:
+      &poly_video_small [
+        [144.94297328363257, -37.77591700770789],
+        [144.94297328363257, -37.78270722604896],
+        [144.94960938814307, -37.78270722604896],
+        [144.94960938814307, -37.77591700770789],
+        [144.94297328363257, -37.77591700770789],
+      ]
+    video_medium:
+      &poly_video_medium [
+        [144.93819689840296, -37.774918585228335],
+        [144.9334080461402, -37.795223570634775],
+        [144.9565672221422, -37.796316985159216],
+        [144.9595934143964, -37.77780710524553],
+        [144.93819689840296, -37.774918585228335],
+      ]
+    video_large:
+      &poly_video_large [
+        [144.89568601073705, -37.769272875943315],
+        [144.889747795225, -37.79853153313184],
+        [144.95585861364196, -37.80569715638713],
+        [144.95985263752345, -37.777075077993295],
+        [144.89568601073705, -37.769272875943315],
+      ]
+
+  request_profiles:
+    # Max distance to consider for each scenario type and scale (AR/VR, Robot IoT, Lidar V2X, Video Privacy)
+    dist_arvr_small: &dist_arvr_small 3750
+    dist_robot_small: &dist_robot_small 250
+    dist_lidar_small: &dist_lidar_small 2500
+    dist_video_small: &dist_video_small 500000
+    dist_arvr_medium: &dist_arvr_medium 7500
+    dist_robot_medium: &dist_robot_medium 500
+    dist_lidar_medium: &dist_lidar_medium 5000
+    dist_video_medium: &dist_video_medium 800000
+    dist_arvr_large: &dist_arvr_large 15000
+    dist_robot_large: &dist_robot_large 1000
+    dist_lidar_large: &dist_lidar_large 10000
+    dist_video_large: &dist_video_large 1000000
+    # Max devices to consider by scenario type (AR/VR, Robot IoT, Lidar V2X, Video Privacy)
+    max_dev_arvr_small: &max_dev_arvr_small 4
+    max_dev_robot_small: &max_dev_robot_small 3
+    max_dev_lidar_small: &max_dev_lidar_small 3
+    max_dev_video_small: &max_dev_video_small 3
+    max_dev_arvr_medium: &max_dev_arvr_medium 6
+    max_dev_robot_medium: &max_dev_robot_medium 6
+    max_dev_lidar_medium: &max_dev_lidar_medium 6
+    max_dev_video_medium: &max_dev_video_medium 6
+    max_dev_arvr_large: &max_dev_arvr_large 10
+    max_dev_robot_large: &max_dev_robot_large 10
+    max_dev_lidar_large: &max_dev_lidar_large 10
+    max_dev_video_large: &max_dev_video_large 10
+    # Max budget by scenario scale (small, medium, large)
+    max_budget_small: &max_budget_small 1000
+    max_budget_medium: &max_budget_medium 5000
+    max_budget_large: &max_budget_large 20000
+    # Devices types required per scenario type (AR/VR, Robot IoT, Lidar V2X, Video Privacy)
+    dev_types_arvr: &dev_types_arvr [CAMERA, SENSOR, NETWORK_NODE, DATA_CENTER]
+    dev_types_robot: &dev_types_robot [SENSOR, COMPUTER, NETWORK_NODE]
+    dev_types_lidar: &dev_types_lidar [SENSOR, NETWORK_NODE, DATA_CENTER]
+    dev_types_video: &dev_types_video [CAMERA, NETWORK_NODE, DATA_CENTER]
+    # Providers to consider in all scenarios
+    providers_to_consider: &providers_to_consider
+      - TELSTRA
+      - OPTUS
+      - MACQUARIE
+      - TELECOM
+      - VODAFONE
+
 experiments:
   small:
-    ar/vr:
+    vr:
       offer:
-        max_devices: 100
-        zone:
-          lat: -37.8136
-          long: 144.9631
-          elevation: 0
-          radius: 15000
-        providers:
-          OPTUS:
-            excludes: 
-              - TELSTRA
-            includes: 
-              - VODAFONE
-          TELSTRA:
-            includes: 
-              - VODAFONE
-          VODAFONE:
-            includes:
-              - OPTUS
-              - TELSTRA
+        max_devices: *max_devices_small
+        zone: *center_melbourne
+        providers: *providers
 
       demand:
-        clients_density: 0.33
-        concurrency: 0.7
-        requests_per_second_per_active_client: 2.0
-        requests_per_second_std: 0.15
-        zone:
-          - [144.95128085314013, -37.81311379425756]
-          - [144.954906094624, -37.82109949971801]
-          - [144.97481006469786, -37.81512407043976]
-          - [144.97090595848454, -37.807413124398344]
-          - [144.95128085314013, -37.81311379425756]
+        n_clients: *n_clients_vr_small
+        concurrency: *conc_arvr
+        requests_per_second_per_active_client: *reqs_per_sec_arvr
+        requests_per_second_std: *reqs_per_sec_std_arvr
+        zone: *poly_arvr_small
 
       request:
-        max_distance: 25000
-        max_devices: 2
-        budget: 10000
-        devices_types_required:
-          - CAMERA
-          - DATA_CENTER
-        providers_to_consider:
-          - TELSTRA
-          - OPTUS
+        max_distance: *dist_arvr_small
+        max_devices: *max_dev_arvr_small
+        budget: *max_budget_small
+        devices_types_required: *dev_types_arvr
+        providers_to_consider: *providers_to_consider
+    robot:
+      offer:
+        max_devices: *max_devices_small
+        zone: *center_melbourne
+        providers: *providers
+
+      demand:
+        n_clients: *n_clients_robot_small
+        concurrency: *conc_robot
+        requests_per_second_per_active_client: *reqs_per_sec_robot
+        requests_per_second_std: *reqs_per_sec_std_robot
+        zone: *poly_robot_small
+
+      request:
+        max_distance: *dist_robot_small
+        max_devices: *max_dev_robot_small
+        budget: *max_budget_small
+        devices_types_required: *dev_types_robot
+        providers_to_consider: *providers_to_consider
+    
+    lidar:
+      offer:
+        max_devices: *max_devices_small
+        zone: *sunbury
+        providers: *providers
+
+      demand:
+        n_clients: *n_clients_lidar_small
+        concurrency: *conc_lidar
+        requests_per_second_per_active_client: *reqs_per_sec_lidar
+        requests_per_second_std: *reqs_per_sec_std_lidar
+        zone: *poly_lidar_small
+
+      request:
+        max_distance: *dist_lidar_small
+        max_devices: *max_dev_lidar_small
+        budget: *max_budget_small
+        devices_types_required: *dev_types_lidar
+        providers_to_consider: *providers_to_consider
+    
+    cctv:
+      offer:
+        max_devices: *max_devices_small
+        zone: *center_melbourne
+        providers: *providers
+
+      demand:
+        n_clients: *n_clients_video_small
+        concurrency: *conc_video
+        requests_per_second_per_active_client: *reqs_per_sec_video
+        requests_per_second_std: *reqs_per_sec_std_video
+        zone: *poly_video_small
+
+      request:
+        max_distance: *dist_video_small
+        max_devices: *max_dev_video_small
+        budget: *max_budget_small
+        devices_types_required: *dev_types_video
+        providers_to_consider: *providers_to_consider
 
   medium:
-    ar/vr:
+    vr:
       offer:
-        max_devices: 1000
-        zone:
-          lat: -37.8136
-          long: 144.9631
-          elevation: 0
-          radius: 15000
-        providers:
-          OPTUS:
-            excludes: 
-              - TELSTRA
-            includes: 
-              - VODAFONE
-          TELSTRA:
-            includes: 
-              - VODAFONE
-          VODAFONE:
-            includes:
-              - OPTUS
-              - TELSTRA
+        max_devices: *max_devices_medium
+        zone: *center_melbourne
+        providers: *providers
 
       demand:
-        clients_density: 0.66
-        concurrency: 0.7
-        requests_per_second_per_active_client: 2.0
-        requests_per_second_std: 0.15
-        zone:
-          - [144.95128085314013, -37.81311379425756]
-          - [144.954906094624, -37.82109949971801]
-          - [144.97481006469786, -37.81512407043976]
-          - [144.97090595848454, -37.807413124398344]
-          - [144.95128085314013, -37.81311379425756]
+        n_clients: *n_clients_vr_medium
+        concurrency: *conc_arvr
+        requests_per_second_per_active_client: *reqs_per_sec_arvr
+        requests_per_second_std: *reqs_per_sec_std_arvr
+        zone: *poly_arvr_medium
 
       request:
-        max_distance: 25000
-        max_devices: 5
-        budget: 10000
-        devices_types_required:
-          - CAMERA
-          - DATA_CENTER
-        providers_to_consider:
-          - TELSTRA
-          - OPTUS
+        max_distance: *dist_arvr_medium
+        max_devices: *max_dev_arvr_medium
+        budget: *max_budget_medium
+        devices_types_required: *dev_types_arvr
+        providers_to_consider: *providers_to_consider
+    robot:
+      offer:
+        max_devices: *max_devices_medium
+        zone: *center_melbourne
+        providers: *providers
+
+      demand:
+        n_clients: *n_clients_robot_medium
+        concurrency: *conc_robot
+        requests_per_second_per_active_client: *reqs_per_sec_robot
+        requests_per_second_std: *reqs_per_sec_std_robot
+        zone: *poly_robot_medium
+
+      request:
+        max_distance: *dist_robot_medium
+        max_devices: *max_dev_robot_medium
+        budget: *max_budget_medium
+        devices_types_required: *dev_types_robot
+        providers_to_consider: *providers_to_consider
+    
+    lidar:
+      offer:
+        max_devices: *max_devices_medium
+        zone: *sunbury
+        providers: *providers
+
+      demand:
+        n_clients: *n_clients_lidar_medium
+        concurrency: *conc_lidar
+        requests_per_second_per_active_client: *reqs_per_sec_lidar
+        requests_per_second_std: *reqs_per_sec_std_lidar
+        zone: *poly_lidar_medium
+
+      request:
+        max_distance: *dist_lidar_medium
+        max_devices: *max_dev_lidar_medium
+        budget: *max_budget_medium
+        devices_types_required: *dev_types_lidar
+        providers_to_consider: *providers_to_consider
+    
+    cctv:
+      offer:
+        max_devices: *max_devices_medium
+        zone: *center_melbourne
+        providers: *providers
+
+      demand:
+        n_clients: *n_clients_video_medium
+        concurrency: *conc_video
+        requests_per_second_per_active_client: *reqs_per_sec_video
+        requests_per_second_std: *reqs_per_sec_std_video
+        zone: *poly_video_medium
+
+      request:
+        max_distance: *dist_video_medium
+        max_devices: *max_dev_video_medium
+        budget: *max_budget_medium
+        devices_types_required: *dev_types_video
+        providers_to_consider: *providers_to_consider
 
   large:
-    ar/vr:
+    vr:
       offer:
-        max_devices: 1500
-        zone:
-          lat: -37.8136
-          long: 144.9631
-          elevation: 0
-          radius: 15000
-        providers:
-          OPTUS:
-            excludes: 
-              - TELSTRA
-            includes: 
-              - VODAFONE
-          TELSTRA:
-            includes: 
-              - VODAFONE
-          VODAFONE:
-            includes:
-              - OPTUS
-              - TELSTRA
+        max_devices: *max_devices_large
+        zone: *center_melbourne
+        providers: *providers
 
       demand:
-        clients_density: 1
-        concurrency: 0.7
-        requests_per_second_per_active_client: 2.0
-        requests_per_second_std: 0.15
-        zone:
-          - [144.95128085314013, -37.81311379425756]
-          - [144.954906094624, -37.82109949971801]
-          - [144.97481006469786, -37.81512407043976]
-          - [144.97090595848454, -37.807413124398344]
-          - [144.95128085314013, -37.81311379425756]
+        n_clients: *n_clients_vr_large
+        concurrency: *conc_arvr
+        requests_per_second_per_active_client: *reqs_per_sec_arvr
+        requests_per_second_std: *reqs_per_sec_std_arvr
+        zone: *poly_arvr_large
 
       request:
-        max_distance: 25000
-        max_devices: 10
-        budget: 10000
-        devices_types_required:
-          - CAMERA
-          - DATA_CENTER
-        providers_to_consider:
-          - TELSTRA
-          - OPTUS
+        max_distance: *dist_arvr_large
+        max_devices: *max_dev_arvr_large
+        budget: *max_budget_large
+        devices_types_required: *dev_types_arvr
+        providers_to_consider: *providers_to_consider
+    robot:
+      offer:
+        max_devices: *max_devices_large
+        zone: *center_melbourne
+        providers: *providers
+
+      demand:
+        n_clients: *n_clients_robot_large
+        concurrency: *conc_robot
+        requests_per_second_per_active_client: *reqs_per_sec_robot
+        requests_per_second_std: *reqs_per_sec_std_robot
+        zone: *poly_robot_large
+
+      request:
+        max_distance: *dist_robot_large
+        max_devices: *max_dev_robot_large
+        budget: *max_budget_large
+        devices_types_required: *dev_types_robot
+        providers_to_consider: *providers_to_consider
+    
+    lidar:
+      offer:
+        max_devices: *max_devices_large
+        zone: *sunbury
+        providers: *providers
+
+      demand:
+        n_clients: *n_clients_lidar_large
+        concurrency: *conc_lidar
+        requests_per_second_per_active_client: *reqs_per_sec_lidar
+        requests_per_second_std: *reqs_per_sec_std_lidar
+        zone: *poly_lidar_large
+
+      request:
+        max_distance: *dist_lidar_large
+        max_devices: *max_dev_lidar_large
+        budget: *max_budget_large
+        devices_types_required: *dev_types_lidar
+        providers_to_consider: *providers_to_consider
+    
+    cctv:
+      offer:
+        max_devices: *max_devices_large
+        zone: *center_melbourne
+        providers: *providers
+
+      demand:
+        n_clients: *n_clients_video_large
+        concurrency: *conc_video
+        requests_per_second_per_active_client: *reqs_per_sec_video
+        requests_per_second_std: *reqs_per_sec_std_video
+        zone: *poly_video_large
+
+      request:
+        max_distance: *dist_video_large
+        max_devices: *max_dev_video_large
+        budget: *max_budget_large
+        devices_types_required: *dev_types_video
+        providers_to_consider: *providers_to_consider

@@ -10,7 +10,7 @@ def optimize(
     pricing_instance_path: str,
     request: Dict[str, Any],
     *,
-    poll_interval_seconds: float = 1.0,
+    poll_interval_seconds: float = 0.1,
     timeout_seconds: Optional[float] = 600.0,
     session: Optional[requests.Session] = None,
 ) -> Dict[str, Any]:
@@ -55,7 +55,7 @@ def optimize(
 
     # 1) Submit job (multipart/form-data)
     filters_json = json.dumps(request, ensure_ascii=False)
-    print(f"Submitting optimization job with filters:\n{json.dumps(json.loads(filters_json), indent=2)}")
+
     data = {
         "operation": "optimal",
         "solver": "minizinc",

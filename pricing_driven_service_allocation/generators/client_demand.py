@@ -3,11 +3,13 @@ import math
 from typing import Dict, Any, Optional
 from enum import Enum
 
+import numpy as np
 class AppType(Enum):
-    AR_VR = "ar_vr"
-    VIDEO_PRIVACY = "video_privacy"
+    AR_VR = "vr"
+    VIDEO_PRIVACY = "cctv"
     LIDAR = "lidar"
-    ROBOT_IOT = "robot_iot"
+    ROBOT_IOT = "robot"
+
 
 def calculate_resources(
     n_clients: int,
