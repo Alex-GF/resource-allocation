@@ -4,10 +4,13 @@ branca==0.8.2
 certifi==2025.11.12
 charset-normalizer==3.4.4
 comm==0.2.3
+contourpy==1.3.3
+cycler==0.12.1
 debugpy==1.8.18
 decorator==5.2.1
 executing==2.2.1
 folium==0.20.0
+fonttools==4.61.1
 idna==3.11
 ipykernel==7.1.0
 ipython==9.8.0
@@ -16,7 +19,9 @@ jedi==0.19.2
 Jinja2==3.1.6
 jupyter_client==8.7.0
 jupyter_core==5.9.1
+kiwisolver==1.4.9
 MarkupSafe==3.0.3
+matplotlib==3.10.8
 matplotlib-inline==0.2.1
 nest-asyncio==1.6.0
 numpy==2.3.5
@@ -24,19 +29,22 @@ packaging==25.0
 pandas==2.3.3
 parso==0.8.5
 pexpect==4.9.0
+pillow==12.1.1
 platformdirs==4.5.1
--e git+https://github.com/Alex-GF/services-allocation.git@1162eb812a7d22f3a63beb4c99ebf8e3c58e109a#egg=pricing_driven_service_allocation
+-e git+https://github.com/Alex-GF/services-allocation.git@6488311ff13db7c923532bfc1c77621ad59932a7#egg=pricing_driven_service_allocation
 prompt_toolkit==3.0.52
 protobuf==6.33.4
 psutil==7.1.3
 ptyprocess==0.7.0
 pure_eval==0.2.3
 Pygments==2.19.2
+pyparsing==3.3.2
 python-dateutil==2.9.0.post0
 pytz==2025.2
 PyYAML==6.0.3
 pyzmq==27.1.0
 requests==2.32.5
+seaborn==0.13.2
 shapely==2.1.2
 six==1.17.0
 stack-data==0.6.3
