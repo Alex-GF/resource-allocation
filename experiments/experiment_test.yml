@@ -24,16 +24,16 @@ common_configs:
       includes:
         - OPTUS
         - TELSTRA
-    TELECOM:
-      includes:
-        - OPTUS
-        - TELSTRA
-    MACQUARIE:
-      includes:
-        - VODAFONE
-        - TELSTRA
-      excludes:
-        - OPTUS
+    # TELECOM:
+    #   includes:
+    #     - OPTUS
+    #     - TELSTRA
+    # MACQUARIE:
+    #   includes:
+    #     - VODAFONE
+    #     - TELSTRA
+    #   excludes:
+    #     - OPTUS
 
   offer_profiles:
     # SMALL SCENARIOS
@@ -97,15 +97,15 @@ common_configs:
 
     # --- Lidar V2X: medium ---
     n_clients_lidar_medium_500: &n_clients_lidar_medium_500 500
-    n_clients_lidar_medium_1000: &n_clients_lidar_medium_1000
+    n_clients_lidar_medium_1000: &n_clients_lidar_medium_1000 1000
     n_clients_lidar_medium_1500: &n_clients_lidar_medium_1500 1500
-    n_clients_lidar_medium_2000: &n_clients_lidar_medium_2000
+    n_clients_lidar_medium_2000: &n_clients_lidar_medium_2000 2000
 
     # --- Lidar V2X: large ---
     n_clients_lidar_large_2500: &n_clients_lidar_large_2500 2500
     n_clients_lidar_large_3500: &n_clients_lidar_large_3500 3500
     n_clients_lidar_large_4500: &n_clients_lidar_large_4500 4500
-    n_clients_lidar_large_5000: &n_clients_lidar_large_5000
+    n_clients_lidar_large_5000: &n_clients_lidar_large_5000 5000
 
     # --- Video Privacy: small ---
     n_clients_video_small_20: &n_clients_video_small_20 20
@@ -252,15 +252,15 @@ common_configs:
   request_profiles:
     # Max distance to consider for each scenario type and scale (AR/VR, Robot IoT, Lidar V2X, Video Privacy)
     dist_arvr_small: &dist_arvr_small 3750
-    dist_robot_small: &dist_robot_small 250
+    dist_robot_small: &dist_robot_small 500
     dist_lidar_small: &dist_lidar_small 2500
     dist_video_small: &dist_video_small 500000
     dist_arvr_medium: &dist_arvr_medium 7500
-    dist_robot_medium: &dist_robot_medium 500
+    dist_robot_medium: &dist_robot_medium 1000
     dist_lidar_medium: &dist_lidar_medium 5000
     dist_video_medium: &dist_video_medium 800000
     dist_arvr_large: &dist_arvr_large 15000
-    dist_robot_large: &dist_robot_large 1000
+    dist_robot_large: &dist_robot_large 1500
     dist_lidar_large: &dist_lidar_large 10000
     dist_video_large: &dist_video_large 1000000
     # Max devices to consider by scenario type (AR/VR, Robot IoT, Lidar V2X, Video Privacy)

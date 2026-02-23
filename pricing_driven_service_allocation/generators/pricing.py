@@ -254,32 +254,54 @@ def compatible_provider_groups_from_offer(topology_offer: dict) -> List[List[str
         Example: [['OPTUS', 'VODAFONE'], ['TELSTRA', 'VODAFONE']]
     """
     providers_config = topology_offer.get('providers', {})
-    
-    # Build compatibility groups for each provider
-    provider_groups = []
-    
-    for provider_name, config in providers_config.items():
-        # Start with the provider itself
-        compatible_group = {provider_name.upper()}
-        
-        # Add providers from 'includes' list
-        includes = config.get('includes', [])
-        for included_provider in includes:
-            compatible_group.add(included_provider.upper())
-        
-        # Remove providers from 'excludes' list
-        excludes = config.get('excludes', [])
-        for excluded_provider in excludes:
-            compatible_group.discard(excluded_provider.upper())
-        
-        # Add this group to the list
-        provider_groups.append(sorted(list(compatible_group)))
-    
-    # Remove duplicates by converting to tuples, using set, then back to lists
-    unique_groups = list(set(tuple(sorted(group)) for group in provider_groups))
-    
-    # Convert back to list of lists
-    result = [list(group) for group in unique_groups]
-    
-    return result
+
+    # Normalize provider names to upper-case
+    providers = [p.upper() for p in providers_config.keys()]
+    if not providers:
+        return []
+
+    # Build excludes map (upper-cased)
+    excludes_map = {
+        p.upper(): set(e.upper() for e in cfg.get('excludes', []))
+        for p, cfg in providers_config.items()
+    }
+
+    # Build undirected adjacency: two providers are connected iff neither
+    # excludes the other. (Mutual non-exclusion -> potential compatibility)
+    adj: Dict[str, set] = {p: set() for p in providers}
+    for a in providers:
+        for b in providers:
+            if a == b:
+                continue
+            a_excludes_b = b in excludes_map.get(a, set())
+            b_excludes_a = a in excludes_map.get(b, set())
+            if not a_excludes_b and not b_excludes_a:
+                adj[a].add(b)
+
+    # Bron–Kerbosch algorithm (no pivot) to find maximal cliques
+    def bron_kerbosch(R: set, P: set, X: set, cliques: list):
+        if not P and not X:
+            cliques.append(sorted(R))
+            return
+        for v in list(P):
+            bron_kerbosch(R.union({v}), P.intersection(adj[v]), X.intersection(adj[v]), cliques)
+            P.remove(v)
+            X.add(v)
+
+    cliques: list = []
+    bron_kerbosch(set(), set(providers), set(), cliques)
+
+    # Keep only cliques of size >= 2 (pairs or larger)
+    result = [sorted(clique) for clique in cliques if len(clique) >= 2]
+
+    # Remove duplicates and sort deterministically
+    unique = []
+    seen = set()
+    for grp in sorted(result):
+        key = tuple(grp)
+        if key not in seen:
+            seen.add(key)
+            unique.append(grp)
+
+    return unique
     
