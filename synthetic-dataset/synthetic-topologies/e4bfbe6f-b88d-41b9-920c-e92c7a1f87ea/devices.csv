@@ -1,0 +1,11 @@
+device_id,latitude,longitude,elevation,provider,global_group,device_type,available_ram_gb,unit_price_available_ram_gb,available_storage_gb,unit_price_available_storage_gb,available_cpu_cores,unit_price_available_cpu_cores,available_gpu_units,unit_price_available_gpu_units,available_tpu_units,unit_price_available_tpu_units,available_network_in_mbps,unit_price_available_network_in_mbps,available_network_out_mbps,unit_price_available_network_out_mbps
+50617,-37.887015,145.080555,,TELSTRA,1,SENSOR,4,1.3,1,1.1,7,15.0,0,120.0,0,200.0,48,0.01,178,0.01
+303713,-37.816082,144.964195,,VODAFONE,2,NETWORK_NODE,26,0.18,661,0.35,16,15.0,1,120.0,1,200.0,2734,0.01,4653,0.01
+9012342,-37.824717,144.98263,,TELSTRA,3,DATA_CENTER,85,0.003,1676,0.1,33,15.0,7,150.0,2,240.0,9063,0.01,9787,0.01
+304963,-37.833312,144.921806,,TELSTRA,3,DATA_CENTER,125,0.003,1102,0.1,48,15.0,6,150.0,3,240.0,9294,0.01,9699,0.01
+50676,-37.824652,144.988783,,TELSTRA,1,CAMERA,5,1.3,11,1.1,7,15.0,0,120.0,0,200.0,239,0.01,88,0.01
+300811,-37.804826,144.986141,,VODAFONE,3,DATA_CENTER,89,0.001,1257,0.05,41,15.0,6,120.0,2,200.0,9907,0.01,9492,0.01
+54871,-37.884998,145.082961,47.0,OPTUS,3,DATA_CENTER,97,0.005,1416,0.08,50,15.0,5,140.0,3,200.0,9304,0.01,9040,0.01
+134289,-37.83776,145.041948,,OPTUS,1,CAMERA,14,1.0,2,0.9,3,15.0,0,120.0,0,200.0,1127,0.01,82,0.01
+303715,-37.811406,144.968947,,VODAFONE,2,COMPUTER,33,0.18,983,0.35,32,15.0,2,120.0,0,200.0,3268,0.01,2141,0.01
+130179,-37.690132,145.013335,101.0,VODAFONE,3,DATA_CENTER,101,0.001,1861,0.05,46,15.0,7,120.0,3,200.0,9210,0.01,9393,0.01

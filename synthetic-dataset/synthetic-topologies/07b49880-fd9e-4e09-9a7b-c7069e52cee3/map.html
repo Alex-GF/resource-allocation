@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Device Topology Map</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color:#f5f5f5; }
+    .container { display:flex; flex-direction:column; height:100vh; }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.1); z-index:10;
+    }
+    .header h1 { font-size:24px; margin-bottom:8px; }
+    .header p { font-size:14px; opacity:0.9; }
+    .controls {
+      background:white; padding:15px 20px; border-bottom:1px solid #e0e0e0;
+      display:flex; gap:15px; align-items:center; flex-wrap:wrap;
+      box-shadow:0 1px 3px rgba(0,0,0,0.05); z-index:9;
+    }
+    .control-group { display:flex; align-items:center; gap:8px; }
+    .control-group label { font-weight:500; font-size:14px; color:#333; }
+    .control-group select, .control-group input {
+      padding:8px 12px; border:1px solid #ddd; border-radius:4px; font-size:14px;
+      background:white; cursor:pointer; transition:border-color 0.2s;
+    }
+    .control-group select:hover, .control-group input:hover { border-color:#667eea; }
+    .control-group select:focus, .control-group input:focus {
+      outline:none; border-color:#667eea; box-shadow:0 0 5px rgba(102, 126, 234, 0.2);
+    }
+    .stats { display:flex; gap:20px; font-size:14px; color:#666; margin-left:auto; }
+    .stats span { font-weight:500; }
+    #map { flex:1; position:relative; }
+    .legend {
+      background:white; padding:12px 16px; border-radius:4px; box-shadow:0 2px 6px rgba(0,0,0,0.1);
+      position:absolute; bottom:20px; right:20px; z-index:1000; font-size:12px; max-width:200px;
+    }
+    .legend h4 { margin-bottom:8px; font-size:13px; font-weight:600; }
+    .legend-item { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+    .legend-color {
+      width:12px; height:12px; border-radius:50%; border:1px solid white; box-shadow:0 0 3px rgba(0,0,0,0.2);
+    }
+    .leaflet-popup-content { max-height:400px; overflow-y:auto; font-size:12px; }
+    .popup-table { width:100%; border-collapse:collapse; }
+    .popup-table tr { border-bottom:1px solid #eee; }
+    .popup-table td { padding:6px; }
+    .popup-table td:first-child {
+      font-weight:600; color:#667eea; width:45%; word-break:break-word;
+    }
+    .popup-table td:last-child { text-align:right; word-break:break-word; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🗺️ Device Topology</h1>
+      <p>Geographic location of devices with dynamic rendering</p>
+    </div>
+    <div class="controls">
+      <div class="control-group">
+        <label for="providerFilter">Filter by provider:</label>
+        <select id="providerFilter">
+                    <option value="">All</option>
+                    <option value="TELSTRA">TELSTRA</option>
+                    <option value="OPTUS">OPTUS</option>
+                    <option value="VODAFONE">VODAFONE</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label for="searchDevice">Search device:</label>
+        <input type="text" id="searchDevice" placeholder="E.g: device id">
+      </div>
+      <div class="stats">
+        <span id="deviceCount">Total: 30</span>
+        <span id="visibleCount">Visible: 0</span>
+      </div>
+    </div>
+    <div id="map"></div>
+    <div class="legend">
+      <h4>Providers</h4>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #34C759;"></div>
+                <span>TELSTRA</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #007AFF;"></div>
+                <span>OPTUS</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ff3b30;"></div>
+                <span>VODAFONE</span>
+            </div>
+    </div>
+  </div>
+
+  <script>
+    const devices = [{"device_id": "301877", "latitude": -37.775802, "longitude": 144.850687, "provider": "TELSTRA", "global_group": 1, "available_ram_gb": 5, "available_storage_gb": 42, "available_cpu_cores": 8, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "9007573", "latitude": -37.720337, "longitude": 144.9408, "provider": "TELSTRA", "global_group": 2, "available_ram_gb": 44, "available_storage_gb": 618, "available_cpu_cores": 28, "available_gpu_units": 1, "available_tpu_units": 0}, {"device_id": "102034", "latitude": -37.717535, "longitude": 144.922198, "provider": "TELSTRA", "global_group": 1, "available_ram_gb": 2, "available_storage_gb": 3, "available_cpu_cores": 1, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "9011995", "latitude": -37.801085, "longitude": 144.754884, "provider": "OPTUS", "global_group": 1, "available_ram_gb": 2, "available_storage_gb": 23, "available_cpu_cores": 4, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "9001989", "latitude": -37.641706, "longitude": 144.911, "provider": "TELSTRA", "global_group": 2, "available_ram_gb": 19, "available_storage_gb": 431, "available_cpu_cores": 18, "available_gpu_units": 1, "available_tpu_units": 1}, {"device_id": "133210", "latitude": -37.666538, "longitude": 144.955166, "provider": "TELSTRA", "global_group": 2, "available_ram_gb": 34, "available_storage_gb": 524, "available_cpu_cores": 31, "available_gpu_units": 1, "available_tpu_units": 0}, {"device_id": "36272", "latitude": -37.652843, "longitude": 144.874254, "provider": "TELSTRA", "global_group": 1, "available_ram_gb": 4, "available_storage_gb": 19, "available_cpu_cores": 8, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "135026", "latitude": -37.57297, "longitude": 144.948246, "provider": "OPTUS", "global_group": 1, "available_ram_gb": 15, "available_storage_gb": 3, "available_cpu_cores": 6, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "502093", "latitude": -37.769506, "longitude": 144.779009, "provider": "TELSTRA", "global_group": 1, "available_ram_gb": 4, "available_storage_gb": 3, "available_cpu_cores": 6, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "134302", "latitude": -37.678516, "longitude": 144.664353, "provider": "OPTUS", "global_group": 2, "available_ram_gb": 50, "available_storage_gb": 781, "available_cpu_cores": 29, "available_gpu_units": 2, "available_tpu_units": 1}, {"device_id": "9026099", "latitude": -37.705706, "longitude": 144.751418, "provider": "VODAFONE", "global_group": 1, "available_ram_gb": 4, "available_storage_gb": 1, "available_cpu_cores": 2, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "570399", "latitude": -37.727456, "longitude": 144.786563, "provider": "OPTUS", "global_group": 1, "available_ram_gb": 3, "available_storage_gb": 26, "available_cpu_cores": 6, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "50897", "latitude": -37.734058, "longitude": 144.906679, "provider": "OPTUS", "global_group": 2, "available_ram_gb": 37, "available_storage_gb": 448, "available_cpu_cores": 27, "available_gpu_units": 2, "available_tpu_units": 1}, {"device_id": "9002508", "latitude": -37.583865, "longitude": 144.693281, "provider": "TELSTRA", "global_group": 3, "available_ram_gb": 108, "available_storage_gb": 1214, "available_cpu_cores": 39, "available_gpu_units": 4, "available_tpu_units": 2}, {"device_id": "301321", "latitude": -37.67966, "longitude": 144.503904, "provider": "TELSTRA", "global_group": 3, "available_ram_gb": 85, "available_storage_gb": 1119, "available_cpu_cores": 58, "available_gpu_units": 7, "available_tpu_units": 3}, {"device_id": "9022364", "latitude": -37.686608, "longitude": 144.536396, "provider": "OPTUS", "global_group": 1, "available_ram_gb": 3, "available_storage_gb": 4, "available_cpu_cores": 5, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "50593", "latitude": -37.750265, "longitude": 144.834175, "provider": "TELSTRA", "global_group": 1, "available_ram_gb": 2, "available_storage_gb": 5, "available_cpu_cores": 2, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "9020392", "latitude": -37.584655, "longitude": 144.941411, "provider": "TELSTRA", "global_group": 1, "available_ram_gb": 3, "available_storage_gb": 2, "available_cpu_cores": 1, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "570473", "latitude": -37.773205, "longitude": 144.80762, "provider": "TELSTRA", "global_group": 3, "available_ram_gb": 114, "available_storage_gb": 1727, "available_cpu_cores": 41, "available_gpu_units": 6, "available_tpu_units": 3}, {"device_id": "9007938", "latitude": -37.766686, "longitude": 144.751479, "provider": "TELSTRA", "global_group": 3, "available_ram_gb": 74, "available_storage_gb": 1741, "available_cpu_cores": 54, "available_gpu_units": 6, "available_tpu_units": 2}, {"device_id": "303969", "latitude": -37.738613, "longitude": 144.85233, "provider": "TELSTRA", "global_group": 1, "available_ram_gb": 7, "available_storage_gb": 2, "available_cpu_cores": 3, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "9014322", "latitude": -37.629794, "longitude": 144.956134, "provider": "OPTUS", "global_group": 1, "available_ram_gb": 3, "available_storage_gb": 4, "available_cpu_cores": 1, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "302560", "latitude": -37.680448, "longitude": 144.947794, "provider": "OPTUS", "global_group": 3, "available_ram_gb": 123, "available_storage_gb": 1654, "available_cpu_cores": 44, "available_gpu_units": 5, "available_tpu_units": 3}, {"device_id": "301014", "latitude": -37.669283, "longitude": 144.931311, "provider": "VODAFONE", "global_group": 1, "available_ram_gb": 4, "available_storage_gb": 5, "available_cpu_cores": 4, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "302961", "latitude": -37.68837, "longitude": 144.72496, "provider": "TELSTRA", "global_group": 3, "available_ram_gb": 95, "available_storage_gb": 1014, "available_cpu_cores": 45, "available_gpu_units": 6, "available_tpu_units": 2}, {"device_id": "9012078", "latitude": -37.73725, "longitude": 144.715671, "provider": "OPTUS", "global_group": 1, "available_ram_gb": 3, "available_storage_gb": 4, "available_cpu_cores": 2, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "303473", "latitude": -37.695474, "longitude": 144.910033, "provider": "TELSTRA", "global_group": 1, "available_ram_gb": 15, "available_storage_gb": 34, "available_cpu_cores": 8, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "102060", "latitude": -37.703326, "longitude": 144.960025, "provider": "TELSTRA", "global_group": 1, "available_ram_gb": 1, "available_storage_gb": 4, "available_cpu_cores": 8, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "50606", "latitude": -37.723466, "longitude": 144.748164, "provider": "TELSTRA", "global_group": 1, "available_ram_gb": 1, "available_storage_gb": 46, "available_cpu_cores": 3, "available_gpu_units": 0, "available_tpu_units": 0}, {"device_id": "301343", "latitude": -37.665403, "longitude": 144.957391, "provider": "TELSTRA", "global_group": 2, "available_ram_gb": 49, "available_storage_gb": 612, "available_cpu_cores": 18, "available_gpu_units": 1, "available_tpu_units": 0}];
+    const providerColors = {"TELSTRA": "#34C759", "OPTUS": "#007AFF", "VODAFONE": "#ff3b30"};
+    const centerLat = -37.57828935077354;
+    const centerLong = 144.72584756258118;
+    const radiusMeters = 25000;
+
+    const resourcesToShow = ["available_ram_gb", "available_storage_gb", "available_cpu_cores", "available_gpu_units", "available_tpu_units"];
+    const resourceLabelMap = {"available_ram_gb": "available_ram_gb", "available_storage_gb": "available_storage_gb", "available_cpu_cores": "available_cpu_cores", "available_gpu_units": "available_gpu_units", "available_tpu_units": "available_tpu_units"};
+    const resourceUnitMap = {"available_ram_gb": "", "available_storage_gb": "", "available_cpu_cores": "", "available_gpu_units": "", "available_tpu_units": ""};
+
+    const map = L.map('map').setView([centerLat, centerLong], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const radiusCircle = L.circle([centerLat, centerLong], {
+      radius: radiusMeters,
+      color: 'blue',
+      fillColor: 'blue',
+      fillOpacity: 0.1
+    }).addTo(map);
+
+    const centerMarker = L.marker([centerLat, centerLong]).addTo(map);
+    centerMarker.bindPopup('Center');
+
+    const markerLayer = L.layerGroup().addTo(map);
+
+    function devicePopupHtml(d) {
+      let resourceRows = "";
+      resourcesToShow.forEach(r => {
+        if (d[r] === undefined) return;
+        const label = resourceLabelMap[r] || r;
+        const unit = resourceUnitMap[r] || "";
+        resourceRows += `<tr><td>${label}</td><td>${d[r]} ${unit}</td></tr>`;
+      });
+
+      return `
+      <table class="popup-table">
+        <tr><td>Device ID</td><td>${d.device_id}</td></tr>
+        <tr><td>Provider</td><td>${d.provider}</td></tr>
+        <tr><td>Group</td><td>${d.global_group}</td></tr>
+        ${resourceRows}
+        <tr><td>Latitude</td><td>${d.latitude.toFixed(6)}</td></tr>
+        <tr><td>Longitude</td><td>${d.longitude.toFixed(6)}</td></tr>
+      </table>`;
+    }
+
+    function renderMarkers(providerFilterValue) {
+      markerLayer.clearLayers();
+      let visible = 0;
+
+      devices.forEach(d => {
+        if (providerFilterValue && d.provider !== providerFilterValue) return;
+        const color = providerColors[d.provider] || '#3182ce';
+        const m = L.circleMarker([d.latitude, d.longitude], {
+          radius: 6,
+          color: color,
+          fillColor: color,
+          fillOpacity: 0.9,
+          weight: 1
+        });
+        m.bindPopup(devicePopupHtml(d));
+        m.addTo(markerLayer);
+        visible += 1;
+      });
+
+      document.getElementById('visibleCount').innerText = `Visible: ${visible}`;
+    }
+
+    renderMarkers('');
+
+    document.getElementById('providerFilter').addEventListener('change', (e) => {
+      renderMarkers(e.target.value);
+    });
+
+    document.getElementById('searchDevice').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const val = e.target.value.trim();
+        const found = devices.find(d => d.device_id === val);
+        if (found) {
+          map.setView([found.latitude, found.longitude], 15);
+          const color = providerColors[found.provider] || '#3182ce';
+          const tempMarker = L.circleMarker([found.latitude, found.longitude], {
+            radius: 8,
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.9,
+            weight: 2
+          }).addTo(map);
+          tempMarker.bindPopup(devicePopupHtml(found)).openPopup();
+          setTimeout(() => map.removeLayer(tempMarker), 5000);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
