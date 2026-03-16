@@ -12,7 +12,8 @@ Modules
 
 from .yaml_utils import (
   yaml_to_pricing_proto,
-  pricing_proto_to_yaml
+  pricing_proto_to_yaml,
+  find_identical_addons
 )
 
 from .geometrical_utils import (
@@ -26,6 +27,7 @@ __all__ = [
     # YAML Utilities
     'yaml_to_pricing_proto',
     'pricing_proto_to_yaml',
+    'find_identical_addons'
     
     # Geometrical Utilities
     'haversine',

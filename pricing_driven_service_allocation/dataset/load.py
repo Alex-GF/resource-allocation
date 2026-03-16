@@ -53,3 +53,42 @@ def load_devices_dataframe(path: str) -> pd.DataFrame:
     ]
     
     return df
+
+
+def load_client_locations_dataframe(path: str) -> pd.DataFrame:
+    """
+    Reads the CSV and returns a DataFrame with the required columns.
+
+    Parameters
+    ----------
+    path : str
+        Path to the devices CSV file.
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with standardized device information.
+    """
+    df = pd.read_csv(path)
+
+    # Rename columns for consistency
+    df.rename(
+        columns={
+            "IP": "client_ip_address",
+            "Latitude": "latitude",
+            "Longitude": "longitude",
+            "PostCode": "zip",
+            "City": "city",
+            "State": "state",
+            "Country": "country",
+        },
+        inplace=True,
+    )
+
+    # Set client_id as index
+    # df.insert(0, 'client_id', range(0, len(df)))
+    # df.set_index("id", inplace=True, drop=False)
+
+    df.drop(["country", "zip", "city", "state", "client_ip_address"], axis=1, inplace=True)
+
+    return df

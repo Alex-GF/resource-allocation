@@ -207,7 +207,7 @@ marimo/_lsp/
 __marimo__/
 
 # Synthetic Topologies Generator
-synthetic-dataset/synthetic-topologies/
+# synthetic-dataset/synthetic-topologies/
 
 .DS_Store
 

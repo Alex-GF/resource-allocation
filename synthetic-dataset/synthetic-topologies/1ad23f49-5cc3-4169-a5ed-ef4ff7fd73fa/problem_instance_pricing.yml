@@ -1,0 +1,144 @@
+saasName: 1ad23f49-5cc3-4169-a5ed-ef4ff7fd73fa
+syntaxVersion: '3.0'
+version: 1.0.0
+createdAt: '2026-03-09'
+currency: USD
+features:
+  NETWORK_NODE:
+    valueType: BOOLEAN
+    defaultValue: false
+    type: DOMAIN
+  SENSOR:
+    valueType: BOOLEAN
+    defaultValue: false
+    type: DOMAIN
+  CAMERA:
+    valueType: BOOLEAN
+    defaultValue: false
+    type: DOMAIN
+  DATA_CENTER:
+    valueType: BOOLEAN
+    defaultValue: false
+    type: DOMAIN
+usageLimits:
+  available_storage_gb:
+    valueType: NUMERIC
+    defaultValue: 0.0
+    unit: GB
+    type: NON_RENEWABLE
+  distance:
+    valueType: NUMERIC
+    defaultValue: 0.0
+    unit: meters
+    type: NON_RENEWABLE
+  available_gpu_units:
+    valueType: NUMERIC
+    defaultValue: 0.0
+    unit: GPU_UNITS
+    type: NON_RENEWABLE
+  available_tpu_units:
+    valueType: NUMERIC
+    defaultValue: 0.0
+    unit: TPU_UNITS
+    type: NON_RENEWABLE
+  available_cpu_cores:
+    valueType: NUMERIC
+    defaultValue: 0.0
+    unit: cores
+    type: NON_RENEWABLE
+  available_ram_gb:
+    valueType: NUMERIC
+    defaultValue: 0.0
+    unit: GB
+    type: NON_RENEWABLE
+addOns:
+  VODAFONE_303713:
+    price: 352.17
+    features:
+      NETWORK_NODE:
+        value: true
+    usageLimitsExtensions:
+      available_storage_gb:
+        value: 661.0
+      distance:
+        value: 99995160.0
+      available_gpu_units:
+        value: 1.0
+      available_tpu_units:
+        value: 1.0
+      available_cpu_cores:
+        value: 16.0
+      available_ram_gb:
+        value: 26.0
+  TELSTRA_9012342:
+    price: 409.712
+    features:
+      DATA_CENTER:
+        value: true
+    usageLimitsExtensions:
+      available_storage_gb:
+        value: 1676.0
+      distance:
+        value: 99993551.0
+      available_gpu_units:
+        value: 7.0
+      available_tpu_units:
+        value: 2.0
+      available_cpu_cores:
+        value: 33.0
+      available_ram_gb:
+        value: 85.0
+  TELSTRA_50617:
+    price: 21.3
+    features:
+      SENSOR:
+        value: true
+    usageLimitsExtensions:
+      available_storage_gb:
+        value: 1.0
+      distance:
+        value: 99982719.0
+      available_gpu_units:
+        value: 0.0
+      available_tpu_units:
+        value: 0.0
+      available_cpu_cores:
+        value: 7.0
+      available_ram_gb:
+        value: 4.0
+  TELSTRA_50676:
+    price: 32.3
+    features:
+      CAMERA:
+        value: true
+    usageLimitsExtensions:
+      available_storage_gb:
+        value: 11.0
+      distance:
+        value: 99993249.0
+      available_gpu_units:
+        value: 0.0
+      available_tpu_units:
+        value: 0.0
+      available_cpu_cores:
+        value: 7.0
+      available_ram_gb:
+        value: 5.0
+  TELSTRA_304963:
+    price: 409.712
+    features:
+      DATA_CENTER:
+        value: true
+    usageLimitsExtensions:
+      available_storage_gb:
+        value: 1102.0
+      distance:
+        value: 99993166.0
+      available_gpu_units:
+        value: 6.0
+      available_tpu_units:
+        value: 3.0
+      available_cpu_cores:
+        value: 48.0
+      available_ram_gb:
+        value: 125.0

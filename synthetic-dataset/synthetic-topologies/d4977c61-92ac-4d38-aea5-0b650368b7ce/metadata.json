@@ -1,0 +1,30 @@
+{
+  "topology_id": "d4977c61-92ac-4d38-aea5-0b650368b7ce",
+  "center_lat": -37.8136,
+  "center_long": 144.9631,
+  "center_elevation": 0,
+  "radius_meters": 15000,
+  "num_devices": 5,
+  "allowed_groups": [
+    1,
+    2,
+    3
+  ],
+  "max_providers": 3,
+  "requested_devices": 5,
+  "providers_in_topology": [
+    "TELSTRA",
+    "VODAFONE"
+  ],
+  "num_providers": 2,
+  "resources_to_consider": [
+    "available_ram_gb",
+    "available_storage_gb",
+    "available_cpu_cores",
+    "available_gpu_units",
+    "available_tpu_units"
+  ],
+  "omitted_resources": [],
+  "devices_csv": "devices.csv",
+  "map_html": "map.html"
+}

@@ -1,0 +1,286 @@
+saasName: 2e5a174c-9214-4fbf-8b84-ccd48c5c6a75
+syntaxVersion: '3.0'
+version: 1.0.0
+createdAt: '2026-03-09'
+currency: USD
+features:
+  NETWORK_NODE:
+    valueType: BOOLEAN
+    defaultValue: false
+    type: DOMAIN
+  COMPUTER:
+    valueType: BOOLEAN
+    defaultValue: false
+    type: DOMAIN
+  SENSOR:
+    valueType: BOOLEAN
+    defaultValue: false
+    type: DOMAIN
+  CAMERA:
+    valueType: BOOLEAN
+    defaultValue: false
+    type: DOMAIN
+usageLimits:
+  available_storage_gb:
+    valueType: NUMERIC
+    defaultValue: 0.0
+    unit: GB
+    type: NON_RENEWABLE
+  distance:
+    valueType: NUMERIC
+    defaultValue: 0.0
+    unit: meters
+    type: NON_RENEWABLE
+  available_gpu_units:
+    valueType: NUMERIC
+    defaultValue: 0.0
+    unit: GPU_UNITS
+    type: NON_RENEWABLE
+  available_tpu_units:
+    valueType: NUMERIC
+    defaultValue: 0.0
+    unit: TPU_UNITS
+    type: NON_RENEWABLE
+  available_cpu_cores:
+    valueType: NUMERIC
+    defaultValue: 0.0
+    unit: cores
+    type: NON_RENEWABLE
+  available_ram_gb:
+    valueType: NUMERIC
+    defaultValue: 0.0
+    unit: GB
+    type: NON_RENEWABLE
+addOns:
+  TELSTRA_502093:
+    price: 52.2
+    excludes:
+    - OPTUS_9011995
+    - OPTUS_135026
+    - OPTUS_134302
+    features:
+      SENSOR:
+        value: true
+    usageLimitsExtensions:
+      available_storage_gb:
+        value: 3.0
+      distance:
+        value: 99977197.0
+      available_gpu_units:
+        value: 0.0
+      available_tpu_units:
+        value: 0.0
+      available_cpu_cores:
+        value: 6.0
+      available_ram_gb:
+        value: 4.0
+  TELSTRA_9007573:
+    price: 182.26
+    excludes:
+    - OPTUS_9011995
+    - OPTUS_135026
+    - OPTUS_134302
+    features:
+      COMPUTER:
+        value: true
+    usageLimitsExtensions:
+      available_storage_gb:
+        value: 618.0
+      distance:
+        value: 99976579.0
+      available_gpu_units:
+        value: 1.0
+      available_tpu_units:
+        value: 0.0
+      available_cpu_cores:
+        value: 28.0
+      available_ram_gb:
+        value: 44.0
+  TELSTRA_102034:
+    price: 20.9
+    excludes:
+    - OPTUS_9011995
+    - OPTUS_135026
+    - OPTUS_134302
+    features:
+      CAMERA:
+        value: true
+    usageLimitsExtensions:
+      available_storage_gb:
+        value: 3.0
+      distance:
+        value: 99977891.0
+      available_gpu_units:
+        value: 0.0
+      available_tpu_units:
+        value: 0.0
+      available_cpu_cores:
+        value: 1.0
+      available_ram_gb:
+        value: 2.0
+  TELSTRA_9001989:
+    price: 382.26
+    excludes:
+    - OPTUS_9011995
+    - OPTUS_135026
+    - OPTUS_134302
+    features:
+      NETWORK_NODE:
+        value: true
+    usageLimitsExtensions:
+      available_storage_gb:
+        value: 431.0
+      distance:
+        value: 99984287.0
+      available_gpu_units:
+        value: 1.0
+      available_tpu_units:
+        value: 1.0
+      available_cpu_cores:
+        value: 18.0
+      available_ram_gb:
+        value: 19.0
+  OPTUS_135026:
+    price: 50.7
+    excludes:
+    - TELSTRA_9001989
+    - TELSTRA_502093
+    - TELSTRA_301877
+    - TELSTRA_133210
+    - TELSTRA_102034
+    - TELSTRA_9007573
+    - TELSTRA_36272
+    features:
+      SENSOR:
+        value: true
+    usageLimitsExtensions:
+      available_storage_gb:
+        value: 3.0
+      distance:
+        value: 99983375.0
+      available_gpu_units:
+        value: 0.0
+      available_tpu_units:
+        value: 0.0
+      available_cpu_cores:
+        value: 6.0
+      available_ram_gb:
+        value: 15.0
+  OPTUS_134302:
+    price: 381.2
+    excludes:
+    - TELSTRA_9001989
+    - TELSTRA_502093
+    - TELSTRA_301877
+    - TELSTRA_133210
+    - TELSTRA_102034
+    - TELSTRA_9007573
+    - TELSTRA_36272
+    features:
+      COMPUTER:
+        value: true
+    usageLimitsExtensions:
+      available_storage_gb:
+        value: 781.0
+      distance:
+        value: 99983473.0
+      available_gpu_units:
+        value: 2.0
+      available_tpu_units:
+        value: 1.0
+      available_cpu_cores:
+        value: 29.0
+      available_ram_gb:
+        value: 50.0
+  OPTUS_9011995:
+    price: 67.7
+    excludes:
+    - TELSTRA_9001989
+    - TELSTRA_502093
+    - TELSTRA_301877
+    - TELSTRA_133210
+    - TELSTRA_102034
+    - TELSTRA_9007573
+    - TELSTRA_36272
+    features:
+      NETWORK_NODE:
+        value: true
+    usageLimitsExtensions:
+      available_storage_gb:
+        value: 23.0
+      distance:
+        value: 99973733.0
+      available_gpu_units:
+        value: 0.0
+      available_tpu_units:
+        value: 0.0
+      available_cpu_cores:
+        value: 4.0
+      available_ram_gb:
+        value: 2.0
+  TELSTRA_133210:
+    price: 182.26
+    excludes:
+    - OPTUS_9011995
+    - OPTUS_135026
+    - OPTUS_134302
+    features:
+      NETWORK_NODE:
+        value: true
+    usageLimitsExtensions:
+      available_storage_gb:
+        value: 524.0
+      distance:
+        value: 99979521.0
+      available_gpu_units:
+        value: 1.0
+      available_tpu_units:
+        value: 0.0
+      available_cpu_cores:
+        value: 31.0
+      available_ram_gb:
+        value: 34.0
+  TELSTRA_36272:
+    price: 69.80000000000001
+    excludes:
+    - OPTUS_9011995
+    - OPTUS_135026
+    - OPTUS_134302
+    features:
+      SENSOR:
+        value: true
+    usageLimitsExtensions:
+      available_storage_gb:
+        value: 19.0
+      distance:
+        value: 99986048.0
+      available_gpu_units:
+        value: 0.0
+      available_tpu_units:
+        value: 0.0
+      available_cpu_cores:
+        value: 8.0
+      available_ram_gb:
+        value: 4.0
+  TELSTRA_301877:
+    price: 74.2
+    excludes:
+    - OPTUS_9011995
+    - OPTUS_135026
+    - OPTUS_134302
+    features:
+      CAMERA:
+        value: true
+    usageLimitsExtensions:
+      available_storage_gb:
+        value: 42.0
+      distance:
+        value: 99975265.0
+      available_gpu_units:
+        value: 0.0
+      available_tpu_units:
+        value: 0.0
+      available_cpu_cores:
+        value: 8.0
+      available_ram_gb:
+        value: 5.0
