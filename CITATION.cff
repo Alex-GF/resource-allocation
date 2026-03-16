@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this software in academic work, please cite it using the metadata below."
-title: "Pricing-Driven Service Allocation for Edge Computing"
+title: "Pricing-Driven Resource Allocation in the Cloud Continuum – Laboratory Package"
 type: software
 version: "1.0.0"
 license: MIT
@@ -20,10 +20,9 @@ authors:
     given-names: "Schahram"
 repository-code: "https://github.com/Alex-GF/services-allocation"
 url: "https://github.com/Alex-GF/services-allocation"
-abstract: "Research software for pricing-driven service allocation and resource optimization over geographically distributed edge resources."
+abstract: "Research software for pricing-driven resource allocation and optimization over geographically distributed edge resources."
 keywords:
-  - edge computing
-  - service allocation
-  - pricing optimization
-  - resource allocation
-  - experimental artifact
+  - Resource allocation
+  - iPricing
+  - Computing Continuum
+  - Optimization Engine
