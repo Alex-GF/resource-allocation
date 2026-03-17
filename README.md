@@ -125,7 +125,7 @@ Pipeline stages implemented in the notebook:
 6. Invoke PRIME optimization through `pdsa.optimize(...)`.
 7. Persist execution metrics in `results/results.csv` and generate figures in `results/figures/`.
 
-### 7. Stop services after completion
+### 6. Stop services after completion
 
 ```bash
 docker-compose down
