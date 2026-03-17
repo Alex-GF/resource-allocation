@@ -13,7 +13,7 @@ pip install -e .
 ## Package Structure
 
 ```
-pricing_driven_service_allocation/
+pricing_driven_resource_allocation/
 ├── __init__.py              # Main package file
 ├── data_loading.py          # Data loading and preprocessing
 ├── resource_assignment.py   # Resource assignment to devices
@@ -80,7 +80,7 @@ Functions for generating problem instances from pricing and user requests.
 ### Option 1: Using generators subpackage (Recommended)
 
 ```python
-import pricing_driven_service_allocation as pdsa
+import pricing_driven_resource_allocation as pdsa
 
 # 1. Load device data
 devices_df = pdsa.load_devices_dataframe("path/to/devices.csv")
@@ -131,7 +131,7 @@ pdsa.generators.problem_instance(
 ### Option 2: Direct imports (Backward compatibility)
 
 ```python
-import pricing_driven_service_allocation as pdsa
+import pricing_driven_resource_allocation as pdsa
 
 # Generator functions are also available at top level with verbose names
 topology_df, topology_id = pdsa.generate_topology(...)

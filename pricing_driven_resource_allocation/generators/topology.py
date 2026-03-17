@@ -11,7 +11,7 @@ from typing import Optional, List, Tuple, Dict, Any
 
 import pandas as pd
 
-from pricing_driven_service_allocation.utils.geometrical_utils import distance_3d
+from pricing_driven_resource_allocation.utils.geometrical_utils import distance_3d
 
 
 def topology(

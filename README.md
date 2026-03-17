@@ -8,7 +8,7 @@ The project is intended for research-grade experimentation and reproducibility.
 
 1. [Project Structure](#project-structure)
 2. [How to Reproduce the Experiment](#how-to-reproduce-the-experiment)
-3. [API of pricing_driven_service_allocation](#api-of-pricing_driven_service_allocation)
+3. [API of pricing_driven_resource_allocation](#api-of-pricing_driven_resource_allocation)
 4. [Data and Outputs](#data-and-outputs)
 5. [License](#license)
 
@@ -28,7 +28,7 @@ services-allocation/
 ├── iPricing/
 │   ├── iPricing.proto                    # Pricing model schema
 │   └── model/                            # Generated Python protobuf module
-├── pricing_driven_service_allocation/    # Core Python package
+├── pricing_driven_resource_allocation/   # Core Python package
 │   ├── __init__.py
 │   ├── optimize.py                       # PRIME API client and polling loop
 │   ├── dataset/
@@ -131,7 +131,7 @@ Pipeline stages implemented in the notebook:
 docker-compose down
 ```
 
-## API of pricing_driven_service_allocation
+## API of pricing_driven_resource_allocation
 
 The package exposes four public namespaces at the top level:
 
@@ -143,7 +143,7 @@ The package exposes four public namespaces at the top level:
 ### Top-level API
 
 ```python
-import pricing_driven_service_allocation as pdsa
+import pricing_driven_resource_allocation as pdsa
 
 pdsa.optimize(...)
 pdsa.dataset.*

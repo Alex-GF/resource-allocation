@@ -31,7 +31,8 @@ parso==0.8.5
 pexpect==4.9.0
 pillow==12.1.1
 platformdirs==4.5.1
--e git+https://github.com/Alex-GF/services-allocation.git@81bbf39324fb9ab4811f6f29b3c27d1935e5e638#egg=pricing_driven_service_allocation
+-e git+https://github.com/Alex-GF/services-allocation.git@53bc4b84561cbe228c9cb5b37616ea9c85d6afc6#egg=pricing_driven_resource_allocation
+-e git+https://github.com/Alex-GF/services-allocation.git@6488311ff13db7c923532bfc1c77621ad59932a7#egg=pricing_driven_service_allocation
 prompt_toolkit==3.0.52
 protobuf==6.33.4
 psutil==7.1.3

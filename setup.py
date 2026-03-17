@@ -1,15 +1,15 @@
-"""Setup configuration for pricing-driven-service-allocation package."""
+"""Setup configuration for pricing-driven-resource-allocation package."""
 
 from setuptools import setup, find_packages
 
-with open("pricing_driven_service_allocation/README.md", "r", encoding="utf-8") as fh:
+with open("pricing_driven_resource_allocation/README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="pricing-driven-service-allocation",
+    name="pricing-driven-resource-allocation",
     version="1.0.0",
     author="Alejandro",
-    description="A package for managing device topologies, resource allocation, and pricing for service allocation problems",
+    description="A package for managing device topologies, resource allocation, and pricing for resource allocation problems",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=find_packages(),
