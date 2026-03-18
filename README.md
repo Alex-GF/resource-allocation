@@ -71,9 +71,16 @@ services-allocation/
 
 ### 2. Clone and install
 
+To clone the repository, use:
+
 ```bash
 git clone <repository-url>
-cd services-allocation
+```
+
+or download the zip file from the anonymous repository.
+
+```bash
+cd resource-allocation
 python -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
