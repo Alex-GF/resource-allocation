@@ -1,6 +1,6 @@
-# Pricing-Driven Resource Allocation in the Cloud Continuum – Laboratory Package
+# Configuring the Computing Continuum with Pricings: Towards General-Purpose Representations of Variability – Laboratory Package
 
-This repository contains the implementation used to study pricing-driven resource allocation in the cloud continuum. The workflow generates topology-specific pricing models, creates constrained problem instances, and delegates optimization to PRIME through its REST API.
+This repository contains the implementation used to study pricing-driven resource allocation in the computing continuum. The workflow generates topology-specific pricing models, creates constrained problem instances, and delegates optimization to PRIME through its REST API.
 
 The project is intended for research-grade experimentation and reproducibility.
 
