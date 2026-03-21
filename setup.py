@@ -8,7 +8,7 @@ with open("pricing_driven_resource_allocation/README.md", "r", encoding="utf-8")
 setup(
     name="pricing-driven-resource-allocation",
     version="1.0.0",
-    author="Alejandro",
+    author="Anonymous",
     description="A package for managing device topologies, resource allocation, and pricing for resource allocation problems",
     long_description=long_description,
     long_description_content_type="text/markdown",

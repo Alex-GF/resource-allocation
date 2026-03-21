@@ -250,4 +250,4 @@ This project is licensed under the MIT License. See [LICENSE](./LICENSE) for det
 
 ### DISCLAIMER
 
-This tool is part of ongoing research by the [ISA group](https://github.com/isa-group) in pricing-driven development and operation. It is in an **early stage** and is not intended for production use. The ISA group does not accept responsibility for any issues or damages that may arise from its use in real-world environments
+This tool is part of ongoing research by the XXXX in pricing-driven development and operation. It is in an **early stage** and is not intended for production use. The XXXX does not accept responsibility for any issues or damages that may arise from its use in real-world environments

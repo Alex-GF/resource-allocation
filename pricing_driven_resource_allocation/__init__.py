@@ -29,7 +29,7 @@ from . import utils
 from .optimize import optimize
 
 __version__ = '1.0.0'
-__author__ = 'Alejandro'
+__author__ = 'Anonymous'
 
 __all__ = [
     # Data Management
