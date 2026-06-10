@@ -146,6 +146,7 @@ The package exposes four public namespaces at the top level:
 - `pdsa.generators`
 - `pdsa.utils`
 - `pdsa.optimize`
+- `pdsa.algorithms`
 
 ### Top-level API
 
@@ -227,6 +228,41 @@ Behavior:
 1. Submits a multipart optimization job to `POST {prime_instance_url}/pricing/analysis`.
 2. Polls `GET {prime_instance_url}/pricing/analysis/{jobId}` until terminal status.
 3. Returns the final payload (`COMPLETED` or `FAILED`).
+
+### `pdsa.algorithms`
+
+The `algorithms` namespace contains RAOM4CC offloading baselines adapted to the
+benchmark objective of this paper. The RAOM4CC policies are used as heuristic
+candidate-ordering strategies, but every generated deployment is evaluated with
+the same objective used by PRIME: satisfy the request constraints while
+minimizing deployment cost. This keeps the comparison meaningful without
+introducing SUMO mobility traces.
+The placement builder is feasibility-aware: it skips candidates that do not
+contribute to pending demand and avoids spending limited deployment slots on
+nodes that make it impossible to cover the remaining resources when a feasible
+continuation is still available.
+
+- `run_raom4cc_benchmark(scenario_id, topology_devices, request, app=...) -> list[dict]`
+    Runs `OneLayer`, `RoundRobin`, `DelayHeuristics`, `DelayEnergyHeuristics`,
+    `BestFit`, and the two hybrid BestFit variants over an existing topology
+    DataFrame and request. Each row reports a selected node configuration,
+    `objective="minimize_cost"`, estimated cost, feasibility, covered
+    resources, delay, energy, and execution time.
+- `save_benchmark_results_to_csv(rows, results_dir, filename="raom4cc_benchmark_results.csv") -> str`
+    Persists the RAOM4CC baseline rows separately from PRIME results.
+
+Typical notebook usage after generating a scenario request:
+
+```python
+devices = pd.read_csv(os.path.join(TOPOLOGIES_DIR, topology_id, "devices.csv"), index_col=0)
+rows = pdsa.algorithms.run_raom4cc_benchmark(
+    scenario_id=id,
+    topology_devices=devices,
+    request=filters[id],
+    app=app,
+)
+pdsa.algorithms.save_benchmark_results_to_csv(rows, RESULTS_DIR)
+```
 
 ## Data and Outputs
 
