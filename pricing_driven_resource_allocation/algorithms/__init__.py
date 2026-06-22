@@ -4,7 +4,7 @@ This package implements the orchestration algorithms described in
 "Resource Allocation Optimization Model for Computing Continuum" without
 depending on SUMO mobility traces.
 """
-
+from .msgdp import (run_msgdp_benchmark,generate_priorities)
 from .raom4cc import (
     ComputingLayer,
     DelayWeights,
@@ -54,5 +54,7 @@ __all__ = [
     "default_algorithm_names",
     "representative_task_from_request",
     "run_raom4cc_benchmark",
+    "run_msgdp_benchmark",
+    "generate_priorities",
     "save_benchmark_results_to_csv",
 ]
