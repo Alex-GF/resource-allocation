@@ -1,6 +1,6 @@
-# Pricing-Driven Resource Allocation in the Cloud Continuum – Laboratory Package
+# Pricing-Driven Resource Allocation in the Computing Continuum – Laboratory Package
 
-This repository contains the implementation used to study pricing-driven resource allocation in the cloud continuum. The workflow generates topology-specific pricing models, creates constrained problem instances, and delegates optimization to PRIME through its REST API.
+This repository contains the implementation used to study pricing-driven resource allocation in the computing continuum. The workflow generates topology-specific pricing models, creates constrained problem instances, and delegates optimization to PRIME through its REST API.
 
 The project is intended for research-grade experimentation and reproducibility.
 
@@ -8,7 +8,7 @@ The project is intended for research-grade experimentation and reproducibility.
 
 1. [Project Structure](#project-structure)
 2. [How to Reproduce the Experiment](#how-to-reproduce-the-experiment)
-3. [API of pricing_driven_service_allocation](#api-of-pricing_driven_service_allocation)
+3. [API of pricing_driven_resource_allocation](#api-of-pricing_driven_resource_allocation)
 4. [Data and Outputs](#data-and-outputs)
 5. [License](#license)
 
@@ -21,16 +21,22 @@ services-allocation/
 ├── config/
 │   └── experiment_configuration.yml      # Scenario definitions (small/medium/large)
 ├── docker-compose.yml                    # PRIME analysis API service (port 3000)
-├── evaluation.ipynb                      # End-to-end experimental pipeline
+├── baseline_comparison.ipynb                # Statistical comparison of all techniques
+├── evaluation.ipynb                        # End-to-end experimental pipeline
 ├── eua-dataset/
 │   ├── edge-servers/                     # Input edge-node datasets
 │   └── users/                            # Input user-location datasets
 ├── iPricing/
 │   ├── iPricing.proto                    # Pricing model schema
 │   └── model/                            # Generated Python protobuf module
-├── pricing_driven_service_allocation/    # Core Python package
+├── pricing_driven_resource_allocation/   # Core Python package
 │   ├── __init__.py
 │   ├── optimize.py                       # PRIME API client and polling loop
+│   ├── algorithms/                       # Baseline algorithm implementations
+│   │   ├── raom4cc.py                    # RAOM4CC offloading algorithms
+│   │   ├── benchmark.py                  # RAOM4CC benchmark adapter
+│   │   ├── edgewisecr.py                 # EdgeWiseCR MILP + greedy engines
+│   │   └── edgewisecr_benchmark.py       # EdgeWiseCR benchmark adapter
 │   ├── dataset/
 │   │   ├── load.py                       # Dataset loading utilities
 │   │   ├── transform.py                  # Filtering and resource assignment
@@ -45,12 +51,17 @@ services-allocation/
 │       ├── geometrical_utils.py          # Spatial computations
 │       └── yaml_utils.py                 # YAML <-> protobuf conversion helpers
 ├── results/
-│   ├── results.csv                       # Aggregated optimization outcomes
-│   └── figures/                          # Publication-ready plots
+│   ├── results.csv                         # Aggregated optimization outcomes (PRIME)
+│   ├── raom4cc_benchmark_results.csv       # RAOM4CC baseline results (9 variants)
+│   ├── edgewisecr_results.csv              # EdgeWiseCR baseline results (6 variants)
+│   └── figures/                            # Publication-ready plots
 ├── synthetic-dataset/
 │   ├── data/
 │   └── synthetic-topologies/             # 9600 generated topologies and instances
 ├── requirements.txt
+├── scripts/
+│   ├── run_raom4cc_benchmark.py           # Run RAOM4CC baselines over all scenarios
+│   └── run_edgewisecr_benchmark.py        # Run EdgeWiseCR baselines over all scenarios
 ├── setup.py
 └── README.md
 ```
@@ -71,9 +82,16 @@ services-allocation/
 
 ### 2. Clone and install
 
+To clone the repository, use:
+
 ```bash
 git clone <repository-url>
-cd services-allocation
+```
+
+or download the zip file from the anonymous repository.
+
+```bash
+cd resource-allocation
 python -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
@@ -125,13 +143,13 @@ Pipeline stages implemented in the notebook:
 6. Invoke PRIME optimization through `pdsa.optimize(...)`.
 7. Persist execution metrics in `results/results.csv` and generate figures in `results/figures/`.
 
-### 7. Stop services after completion
+### 6. Stop services after completion
 
 ```bash
 docker-compose down
 ```
 
-## API of pricing_driven_service_allocation
+## API of pricing_driven_resource_allocation
 
 The package exposes four public namespaces at the top level:
 
@@ -139,11 +157,12 @@ The package exposes four public namespaces at the top level:
 - `pdsa.generators`
 - `pdsa.utils`
 - `pdsa.optimize`
+- `pdsa.algorithms`
 
 ### Top-level API
 
 ```python
-import pricing_driven_service_allocation as pdsa
+import pricing_driven_resource_allocation as pdsa
 
 pdsa.optimize(...)
 pdsa.dataset.*
@@ -221,6 +240,41 @@ Behavior:
 2. Polls `GET {prime_instance_url}/pricing/analysis/{jobId}` until terminal status.
 3. Returns the final payload (`COMPLETED` or `FAILED`).
 
+### `pdsa.algorithms`
+
+The `algorithms` namespace contains RAOM4CC offloading baselines adapted to the
+benchmark objective of this paper. The RAOM4CC policies are used as heuristic
+candidate-ordering strategies, but every generated deployment is evaluated with
+the same objective used by PRIME: satisfy the request constraints while
+minimizing deployment cost. This keeps the comparison meaningful without
+introducing SUMO mobility traces.
+The placement builder is feasibility-aware: it skips candidates that do not
+contribute to pending demand and avoids spending limited deployment slots on
+nodes that make it impossible to cover the remaining resources when a feasible
+continuation is still available.
+
+- `run_raom4cc_benchmark(scenario_id, topology_devices, request, app=...) -> list[dict]`
+    Runs `OneLayer`, `RoundRobin`, `DelayHeuristics`, `DelayEnergyHeuristics`,
+    `BestFit`, and the two hybrid BestFit variants over an existing topology
+    DataFrame and request. Each row reports a selected node configuration,
+    `objective="minimize_cost"`, estimated cost, feasibility, covered
+    resources, delay, energy, and execution time.
+- `save_benchmark_results_to_csv(rows, results_dir, filename="raom4cc_benchmark_results.csv") -> str`
+    Persists the RAOM4CC baseline rows separately from PRIME results.
+
+Typical notebook usage after generating a scenario request:
+
+```python
+devices = pd.read_csv(os.path.join(TOPOLOGIES_DIR, topology_id, "devices.csv"), index_col=0)
+rows = pdsa.algorithms.run_raom4cc_benchmark(
+    scenario_id=id,
+    topology_devices=devices,
+    request=filters[id],
+    app=app,
+)
+pdsa.algorithms.save_benchmark_results_to_csv(rows, RESULTS_DIR)
+```
+
 ## Data and Outputs
 
 - Input datasets:
@@ -243,4 +297,4 @@ This project is licensed under the MIT License. See [LICENSE](./LICENSE) for det
 
 ### DISCLAIMER
 
-This tool is part of ongoing research by the [ISA group](https://github.com/isa-group) in pricing-driven development and operation. It is in an **early stage** and is not intended for production use. The ISA group does not accept responsibility for any issues or damages that may arise from its use in real-world environments
+This tool is part of ongoing research by the XXXX in pricing-driven development and operation. It is in an **early stage** and is not intended for production use. The XXXX does not accept responsibility for any issues or damages that may arise from its use in real-world environments
