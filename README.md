@@ -21,7 +21,8 @@ services-allocation/
 ├── config/
 │   └── experiment_configuration.yml      # Scenario definitions (small/medium/large)
 ├── docker-compose.yml                    # PRIME analysis API service (port 3000)
-├── evaluation.ipynb                      # End-to-end experimental pipeline
+├── baseline_comparison.ipynb                # Statistical comparison of all techniques
+├── evaluation.ipynb                        # End-to-end experimental pipeline
 ├── eua-dataset/
 │   ├── edge-servers/                     # Input edge-node datasets
 │   └── users/                            # Input user-location datasets
@@ -31,6 +32,11 @@ services-allocation/
 ├── pricing_driven_resource_allocation/   # Core Python package
 │   ├── __init__.py
 │   ├── optimize.py                       # PRIME API client and polling loop
+│   ├── algorithms/                       # Baseline algorithm implementations
+│   │   ├── raom4cc.py                    # RAOM4CC offloading algorithms
+│   │   ├── benchmark.py                  # RAOM4CC benchmark adapter
+│   │   ├── edgewisecr.py                 # EdgeWiseCR MILP + greedy engines
+│   │   └── edgewisecr_benchmark.py       # EdgeWiseCR benchmark adapter
 │   ├── dataset/
 │   │   ├── load.py                       # Dataset loading utilities
 │   │   ├── transform.py                  # Filtering and resource assignment
@@ -45,12 +51,17 @@ services-allocation/
 │       ├── geometrical_utils.py          # Spatial computations
 │       └── yaml_utils.py                 # YAML <-> protobuf conversion helpers
 ├── results/
-│   ├── results.csv                       # Aggregated optimization outcomes
-│   └── figures/                          # Publication-ready plots
+│   ├── results.csv                         # Aggregated optimization outcomes (PRIME)
+│   ├── raom4cc_benchmark_results.csv       # RAOM4CC baseline results (9 variants)
+│   ├── edgewisecr_results.csv              # EdgeWiseCR baseline results (6 variants)
+│   └── figures/                            # Publication-ready plots
 ├── synthetic-dataset/
 │   ├── data/
 │   └── synthetic-topologies/             # 9600 generated topologies and instances
 ├── requirements.txt
+├── scripts/
+│   ├── run_raom4cc_benchmark.py           # Run RAOM4CC baselines over all scenarios
+│   └── run_edgewisecr_benchmark.py        # Run EdgeWiseCR baselines over all scenarios
 ├── setup.py
 └── README.md
 ```

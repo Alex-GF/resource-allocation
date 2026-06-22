@@ -31,6 +31,18 @@ from .benchmark import (
     run_raom4cc_benchmark,
     save_benchmark_results_to_csv,
 )
+from .edgewisecr import (
+    DEFAULT_TIMEOUT_SECONDS,
+    EdgeWiseResult,
+    edgewise_greedy_solve,
+    edgewise_milp_solve,
+)
+from .edgewisecr_benchmark import (
+    EdgeWiseSelection,
+    default_algorithm_names as edgewisecr_default_algorithm_names,
+    run_edgewisecr_benchmark,
+    save_benchmark_results_to_csv as save_edgewisecr_benchmark_results_to_csv,
+)
 
 __all__ = [
     "ComputingLayer",
@@ -55,4 +67,12 @@ __all__ = [
     "representative_task_from_request",
     "run_raom4cc_benchmark",
     "save_benchmark_results_to_csv",
+    "DEFAULT_TIMEOUT_SECONDS",
+    "EdgeWiseResult",
+    "EdgeWiseSelection",
+    "edgewise_greedy_solve",
+    "edgewise_milp_solve",
+    "edgewisecr_default_algorithm_names",
+    "run_edgewisecr_benchmark",
+    "save_edgewisecr_benchmark_results_to_csv",
 ]
