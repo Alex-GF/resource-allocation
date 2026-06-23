@@ -28,11 +28,10 @@ DEFAULT_SERVICE_PROFILES: Dict[str, Dict[str, float]] = {
 class MSGDPBenchmarkResult:
     """Matches the exact output contract structure expected by the baseline runner."""
     scenario_id: str
-    algorithm: str = "MS-GD-P"
-    status: str = "COMPLETED"
-    selected_node: str = ""
-    selected_layer: str = "edge"
-    objective: str = "maximize_coverage_and_reliability"
+    status: str
+    selected_nodes: List[str] = ""
+    # selected_layer: str = "" # TODO: Not sure if this is needed
+    # objective: str = "minimize_cost"
     time_seconds: float = 0.0
     estimated_delay_seconds: Optional[float] = None
     estimated_energy_joules: Optional[float] = None
@@ -45,11 +44,10 @@ class MSGDPBenchmarkResult:
     def as_row(self) -> Dict[str, Any]:
         return {
             "scenario_id": self.scenario_id,
-            "algorithm": self.algorithm,
             "status": self.status,
-            "selected_node": self.selected_node,
-            "selected_layer": self.selected_layer,
-            "objective": self.objective,
+            "selected_nodes": self.selected_nodes,
+            # "selected_layer": self.selected_layer,
+            # "objective": self.objective,
             "time_seconds": self.time_seconds,
             "estimated_delay_seconds": self.estimated_delay_seconds,
             "estimated_energy_joules": self.estimated_energy_joules,
@@ -177,6 +175,12 @@ class PriorityGAEngine:
         final_scores = [self.fitness(ind) for ind in population]
         return population[np.argmax(final_scores)], max(final_scores)
 
+def _create_standard_device_ids(best_ids, device_topology) -> List[str]:
+    standardized_ids = []
+    for s in best_ids[0]:
+        row = device_topology.iloc[s]
+        standardized_ids.append(f"{row["provider"]}_{row.name}")
+    return standardized_ids
 
 def run_msgdp_benchmark(scenario_id: str, topology_devices: pd.DataFrame, request: Mapping[str, Any], app: str) -> List[
     Dict[str, Any]]:
@@ -187,10 +191,11 @@ def run_msgdp_benchmark(scenario_id: str, topology_devices: pd.DataFrame, reques
         if num_servers == 0:
             raise ValueError("Empty server topology received.")
 
-        # Re-derive positions dynamically from the scenario topology definition
+        # TODO: That's actually nonsense
         server_coords = np.random.rand(num_servers, 2) * 100
         user_coords = np.random.rand(40, 2) * 100
 
+        # TODO: Not sure what is actually used as input here
         profile = DEFAULT_SERVICE_PROFILES.get(str(app).lower(), {"cost": 200, "density_centers": 1, "radius": 35.0})
         costs = np.array([profile["cost"]])
         density_centers = np.array([profile["density_centers"]])
@@ -203,18 +208,23 @@ def run_msgdp_benchmark(scenario_id: str, topology_devices: pd.DataFrame, reques
         n_instances = allocate_budget(1, max_budget, costs, density_centers)
 
         optimizer = PriorityGAEngine(1, num_servers, 40, server_coords, user_coords, radii, n_instances, P_ij)
-        best_plan, _ = optimizer.run_optimization(gens=8, pop_size=12)
+        best_plan, _ = optimizer.run_optimization(gens=50, pop_size=50) # TODO: What are the correct hyperparams here?
 
         selected_nodes = best_plan.get(0, [0])
         elapsed = time.perf_counter() - start_time
 
+        device_ids = _create_standard_device_ids(best_plan, topology_devices)
+
         res = MSGDPBenchmarkResult(
             scenario_id=scenario_id,
+            status="COMPLETED",
             time_seconds=elapsed,
-            estimated_cost=float(len(selected_nodes) * profile["cost"]),
-            selected_node=str(selected_nodes),
-            selected_features=str([app]),
-            selected_resources=f"{{'instances': {len(selected_nodes)}}}"
+            # estimated_delay_seconds=deployment.delay_seconds #
+            # estimated_energy_joules=deployment.energy_joules #
+            estimated_cost=float(len(selected_nodes) * profile["cost"]), # TODO: Fix estimated cost
+            selected_nodes=device_ids,
+            selected_features=str([app]), # TODO: Fix selected feature
+            selected_resources=f"{{'instances': {len(selected_nodes)}}}" # TODO: Fix selected resource
         )
         return [res.as_row()]
     except Exception as exc:

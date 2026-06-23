@@ -30,7 +30,6 @@ DEFAULT_OUTPUT = RESULTS_DIR / "msgdp_benchmark_results.csv"
 
 # Import engine functions directly from our sister module
 
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-csv", type=Path, default=DEFAULT_RESULTS_CSV)
