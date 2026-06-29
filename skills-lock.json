@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "academic-writing": {
+      "source": "poemswe/co-researcher",
+      "sourceType": "github",
+      "skillPath": "skills/academic-writing/SKILL.md",
+      "computedHash": "740cec9a67e27e42929031430a8ddfcc7b04888be0e13c4127a8a29d68c9e1de"
+    }
+  }
+}
