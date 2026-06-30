@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Mapping, Optional
 
 import pandas as pd
+import yaml
 
 from pricing_driven_resource_allocation.algorithms import run_msgdp_benchmark
 
@@ -58,6 +59,11 @@ def main() -> int:
             continue
 
         devices_path = args.topologies_dir / topology_id / "devices.csv"
+        problem_path = args.topologies_dir / topology_id / "problem_instance_pricing.yml"
+
+        with open(problem_path, "r") as file:
+            topology_info = yaml.safe_load(file)
+
         if not devices_path.exists():
             missing_mappings.append(scenario_id)
             continue
@@ -70,6 +76,7 @@ def main() -> int:
         heuristic_rows = run_msgdp_benchmark(
             scenario_id=scenario_id,
             topology_devices=devices,
+            full_topology_info=topology_info,
             request=request,
             app=app,
         )

@@ -39,7 +39,7 @@ class MSGDPBenchmarkResult:
     estimated_cost: Optional[float] = None
     feasible: bool = True
     reason: str = ""
-    selected_features: str = ""
+    selected_features: List[str] = ""
     selected_resources: str = ""
 
     def as_row(self) -> Dict[str, Any]:
@@ -177,17 +177,19 @@ class PriorityGAEngine:
         return population[np.argmax(final_scores)], max(final_scores)
 
 
-def _create_standard_device_ids(best_ids, device_topology) -> Tuple[List[str], List[str]]:
+def _create_standard_device_ids(best_ids, device_topology) -> Tuple[List[str], List[str], List[str]]:
     standardized_ids = []
     plain_ids = []
+    device_types = []
     for s in best_ids[0]:
         row = device_topology.iloc[s]
         standardized_ids.append(f"{row["provider"]}_{row.name}")
         plain_ids.append(row.name)
-    return plain_ids, standardized_ids
+        device_types.append(row.device_type)
+    return plain_ids, standardized_ids, device_types
 
 
-def run_msgdp_benchmark(scenario_id: str, topology_devices: pd.DataFrame, request: Mapping[str, Any], app: str) -> List[
+def run_msgdp_benchmark(scenario_id: str, topology_devices: pd.DataFrame, full_topology_info: Dict, request: Mapping[str, Any], app: str) -> List[
     Dict[str, Any]]:
     """Execution signature designed to interface cleanly with the benchmark execution loop."""
     start_time = time.perf_counter()
@@ -213,15 +215,18 @@ def run_msgdp_benchmark(scenario_id: str, topology_devices: pd.DataFrame, reques
         n_instances = allocate_budget(1, max_budget, costs, density_centers)
 
         optimizer = PriorityGAEngine(1, num_servers, 40, server_coords, user_coords, radii, n_instances, P_ij)
-        best_plan, _ = optimizer.run_optimization(gens=50, pop_size=20)
+        best_plan, _ = optimizer.run_optimization(gens=15, pop_size=10)
 
-        selected_nodes = best_plan.get(0, [0])
+        # selected_nodes = best_plan.get(0, [0])
         elapsed = time.perf_counter() - start_time
 
-        plain_ids, provider_device_ids = _create_standard_device_ids(best_plan, topology_devices)
+        plain_ids, provider_device_ids, device_types = _create_standard_device_ids(best_plan, topology_devices)
         resource_demands = request['usageLimits']
         del resource_demands["distance"]
         total_cost = calculate_topology_cost(topology_devices, plain_ids, resource_demands)
+
+        if total_cost > 1000:
+            raise RuntimeWarning("Exceeding total cost")
 
         res = MSGDPBenchmarkResult(
             scenario_id=scenario_id,
@@ -229,14 +234,50 @@ def run_msgdp_benchmark(scenario_id: str, topology_devices: pd.DataFrame, reques
             time_seconds=elapsed,
             estimated_cost=total_cost,
             selected_nodes=provider_device_ids,
-            selected_features=str([app]),  # Cannot select feature by design
-            selected_resources=f"{{'instances': {len(selected_nodes)}}}"
+            selected_features=device_types,  # Cannot select feature by design
+            # selected_resources=f"{{'instances': {len(selected_nodes)}}}"
         )
+
+        if check_any_prohibited_combinations(full_topology_info['addOns'], provider_device_ids):
+            raise RuntimeWarning("Combination violates rules")
+
+        if not set(request['features']).issubset(device_types):
+            raise RuntimeWarning("Requested features not provided")
+
         return [res.as_row()]
     except Exception as exc:
         elapsed = time.perf_counter() - start_time
         return [MSGDPBenchmarkResult(scenario_id=scenario_id, status="FAILED", time_seconds=elapsed, feasible=False,
                                      reason=str(exc)).as_row()]
+
+def check_any_prohibited_combinations(addons_dict, selected_nodes):
+
+    # 3. Extract unique exclusions for selected nodes using a set (handles repetition)
+    excluded_devices = set()
+
+    for node in selected_nodes:
+        # Check if the selected node exists in our YAML data and has an 'excludes' key
+        if node in addons_dict and "excludes" in addons_dict[node]:
+            exclusions = addons_dict[node]["excludes"]
+            if exclusions:  # Ensure it's not None
+                for device in exclusions:
+                    excluded_devices.add(device)
+
+    # print(f"Total unique excluded devices found: {len(excluded_devices)}")
+    # print(f"Excluded devices list: {list(excluded_devices)}\n")
+
+    # 4. Check if any excluded devices are present in your selected nodes list
+    violations = [node for node in selected_nodes if node in excluded_devices]
+
+    # Output results
+    if violations:
+        # print(f"⚠️ VIOLATION DETECTED: The following selected nodes are explicitly excluded by other selected nodes:")
+        for v in violations:
+            # print(f" - {v}")
+            return True
+    else:
+        # print("✅ Clear! None of the selected nodes are in the exclusion list.")
+        return False
 
 def calculate_topology_cost(df_topology,selected_devices,resource_demands):
 
