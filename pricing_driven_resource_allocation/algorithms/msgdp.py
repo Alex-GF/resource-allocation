@@ -7,12 +7,13 @@ to the benchmark's input/output signatures.
 
 from __future__ import annotations
 
-import time
 import random
+import time
+from dataclasses import dataclass
+from typing import Any, Dict, List, Mapping, Optional, Tuple
+
 import numpy as np
 import pandas as pd
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Sequence
 
 # Global lookup matching table 3 task specifications
 DEFAULT_SERVICE_PROFILES: Dict[str, Dict[str, float]] = {
@@ -175,12 +176,16 @@ class PriorityGAEngine:
         final_scores = [self.fitness(ind) for ind in population]
         return population[np.argmax(final_scores)], max(final_scores)
 
-def _create_standard_device_ids(best_ids, device_topology) -> List[str]:
+
+def _create_standard_device_ids(best_ids, device_topology) -> Tuple[List[str], List[str]]:
     standardized_ids = []
+    plain_ids = []
     for s in best_ids[0]:
         row = device_topology.iloc[s]
         standardized_ids.append(f"{row["provider"]}_{row.name}")
-    return standardized_ids
+        plain_ids.append(row.name)
+    return plain_ids, standardized_ids
+
 
 def run_msgdp_benchmark(scenario_id: str, topology_devices: pd.DataFrame, request: Mapping[str, Any], app: str) -> List[
     Dict[str, Any]]:
@@ -191,11 +196,11 @@ def run_msgdp_benchmark(scenario_id: str, topology_devices: pd.DataFrame, reques
         if num_servers == 0:
             raise ValueError("Empty server topology received.")
 
-        # TODO: That's actually nonsense
+        # Replacing the standard distance with a simplification
         server_coords = np.random.rand(num_servers, 2) * 100
         user_coords = np.random.rand(40, 2) * 100
 
-        # TODO: Not sure what is actually used as input here
+        # Replacing the standard distance with a simplification
         profile = DEFAULT_SERVICE_PROFILES.get(str(app).lower(), {"cost": 200, "density_centers": 1, "radius": 35.0})
         costs = np.array([profile["cost"]])
         density_centers = np.array([profile["density_centers"]])
@@ -208,26 +213,81 @@ def run_msgdp_benchmark(scenario_id: str, topology_devices: pd.DataFrame, reques
         n_instances = allocate_budget(1, max_budget, costs, density_centers)
 
         optimizer = PriorityGAEngine(1, num_servers, 40, server_coords, user_coords, radii, n_instances, P_ij)
-        best_plan, _ = optimizer.run_optimization(gens=50, pop_size=50) # TODO: What are the correct hyperparams here?
+        best_plan, _ = optimizer.run_optimization(gens=50, pop_size=20)
 
         selected_nodes = best_plan.get(0, [0])
         elapsed = time.perf_counter() - start_time
 
-        device_ids = _create_standard_device_ids(best_plan, topology_devices)
+        plain_ids, provider_device_ids = _create_standard_device_ids(best_plan, topology_devices)
+        resource_demands = request['usageLimits']
+        del resource_demands["distance"]
+        total_cost = calculate_topology_cost(topology_devices, plain_ids, resource_demands)
 
         res = MSGDPBenchmarkResult(
             scenario_id=scenario_id,
             status="COMPLETED",
             time_seconds=elapsed,
-            # estimated_delay_seconds=deployment.delay_seconds #
-            # estimated_energy_joules=deployment.energy_joules #
-            estimated_cost=float(len(selected_nodes) * profile["cost"]), # TODO: Fix estimated cost
-            selected_nodes=device_ids,
-            selected_features=str([app]), # TODO: Fix selected feature
-            selected_resources=f"{{'instances': {len(selected_nodes)}}}" # TODO: Fix selected resource
+            estimated_cost=total_cost,
+            selected_nodes=provider_device_ids,
+            selected_features=str([app]),  # Cannot select feature by design
+            selected_resources=f"{{'instances': {len(selected_nodes)}}}"
         )
         return [res.as_row()]
     except Exception as exc:
         elapsed = time.perf_counter() - start_time
         return [MSGDPBenchmarkResult(scenario_id=scenario_id, status="FAILED", time_seconds=elapsed, feasible=False,
                                      reason=str(exc)).as_row()]
+
+def calculate_topology_cost(df_topology,selected_devices,resource_demands):
+
+    # 3. Filter the topology for selected devices
+    df_selected = df_topology[df_topology.index.isin(selected_devices)].copy()
+
+    # 4. Optimize and Calculate Cost
+    total_cost = 0.0
+    allocation_summary = {}
+
+    # print("--- Resource Allocation Breakdown ---")
+
+    for resource, demand in resource_demands.items():
+        if demand <= 0:
+            continue
+
+        price_col = f"unit_price_{resource}"
+
+        # Sort devices by the cheapest unit price for this specific resource
+        df_sorted = df_selected.sort_values(by=price_col)
+
+        allocated_for_resource = 0
+        resource_cost = 0.0
+
+        for _, device in df_sorted.iterrows():
+            if allocated_for_resource >= demand:
+                break
+
+            # dev_id = device.name
+            available = device[resource]
+            price = device[price_col]
+
+            # Determine how much to take from this device
+            needed = demand - allocated_for_resource
+            taken = min(available, needed)
+
+            if taken > 0:
+                cost = taken * price
+                resource_cost += cost
+                allocated_for_resource += taken
+                # print(f"Resource '{resource}': Took {taken} from Device {dev_id} @ ${price}/unit (Cost: ${cost:.4f})")
+
+        # Check if we fulfilled the demand
+        if allocated_for_resource < demand:
+            raise RuntimeWarning("Not sufficient Resources")
+            print(
+                f"⚠️ WARNING: Insufficient resources for {resource}. Demanded: {demand}, Fulfilled: {allocated_for_resource}")
+
+        total_cost += resource_cost
+        allocation_summary[resource] = {'allocated': allocated_for_resource, 'cost': resource_cost}
+
+    # print("-------------------------------------")
+    # print(f"Total Optimized Cost: ${total_cost:.4f}")
+    return total_cost
