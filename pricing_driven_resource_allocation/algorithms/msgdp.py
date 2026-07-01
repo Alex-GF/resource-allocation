@@ -10,6 +10,7 @@ from __future__ import annotations
 import random
 import time
 from dataclasses import dataclass
+from ftplib import error_perm
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 import numpy as np
@@ -225,8 +226,20 @@ def run_msgdp_benchmark(scenario_id: str, topology_devices: pd.DataFrame, full_t
         del resource_demands["distance"]
         total_cost = calculate_topology_cost(topology_devices, plain_ids, resource_demands)
 
-        if total_cost > 1000:
-            raise RuntimeWarning("Exceeding total cost")
+        # if total_cost > 1000:
+        #     raise RuntimeWarning("Exceeding total cost")
+
+
+        error_reason = ""
+        if check_any_prohibited_combinations(full_topology_info['addOns'], provider_device_ids):
+            # raise RuntimeWarning("Combination violates rules")
+            error_reason += "T1,"
+
+        if not set(request['features']).intersection(device_types):
+            error_reason += "T2,"
+
+        if not set(request['features']).issubset(device_types):
+            error_reason += "T3"
 
         res = MSGDPBenchmarkResult(
             scenario_id=scenario_id,
@@ -235,14 +248,9 @@ def run_msgdp_benchmark(scenario_id: str, topology_devices: pd.DataFrame, full_t
             estimated_cost=total_cost,
             selected_nodes=provider_device_ids,
             selected_features=device_types,  # Cannot select feature by design
+            reason=error_reason
             # selected_resources=f"{{'instances': {len(selected_nodes)}}}"
         )
-
-        if check_any_prohibited_combinations(full_topology_info['addOns'], provider_device_ids):
-            raise RuntimeWarning("Combination violates rules")
-
-        if not set(request['features']).issubset(device_types):
-            raise RuntimeWarning("Requested features not provided")
 
         return [res.as_row()]
     except Exception as exc:
