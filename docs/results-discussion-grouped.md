@@ -101,9 +101,12 @@ structure in ways that our metrics capture.
 **Group E — MS-GD-P (1 variant).** This is a genetic algorithm for multi-service
 geographic deployment based on priority. It optimises user coverage and service reliability
 across geographic regions, selecting multiple nodes (median 3) to satisfy service requirements.
-MS-GD-P achieves 100% feasibility across all application types while executing in
-sub-millisecond times, demonstrating that evolutionary approaches can efficiently explore
-the solution space for multi-node placement problems.
+MS-GD-P achieves only 11.4 % feasibility under provider exclusion (5.8–17.0 % across
+applications), because its priority-driven search frequently co-deploys OPTUS and TELSTRA
+devices that the exclusion constraint forbids. Under the critical device-type requirement
+feasibility stays near 10.1 %, and under full device-type coverage it collapses to 2.1 %,
+demonstrating that evolutionary coverage maximisation does not enforce the constraint
+completeness that PROMISE guarantees.
 
 PROMISE stands alone as the sixth technique category. It uses a constraint programming solver
 (MiniZinc) that explores the full feasible solution space with 12 hard constraint types,
@@ -129,15 +132,19 @@ definition PROMISE solves.
 Under the full constraint set the picture changes materially. The EdgeWiseCR MILP
 variants (`edgewise`, `edgewise_cr`, `edgewise_num`) collapse to 8–67 % across
 applications, because their multi-node deployments frequently co-locate OPTUS and
-TELSTRA devices that exclude each other. The RAOM4CC multi-layer heuristics that
-select across more than one node (`round_robin`, `one_layer_edge`) drop to 88–100 %
-depending on the application, reflecting sporadic co-deployments of mutually
-exclusive providers. The variants that select a single node (`one_layer_mist`,
-`one_layer_cloud`, RAOM4CC advanced, EdgeWiseCR `prolog`) cannot violate the
-exclusion by construction; their rate equals the original feasibility rate. PROMISE
-remains at 100 % across all applications. The remaining 13 techniques stay feasible
-on the constraints they model but, with the exception of the single-node heuristics,
-lose feasibility once provider co-deployment is enforced.
+TELSTRA devices that exclude each other. MS-GD-P suffers the steepest collapse,
+dropping to 5.8–17.0 % across applications (11.4 % overall), because its
+priority-driven genetic search maximises coverage without checking provider
+compatibility and routinely co-deploys mutually exclusive providers. The RAOM4CC
+multi-layer heuristics that select across more than one node (`round_robin`,
+`one_layer_edge`) drop to 88–100 % depending on the application, reflecting
+sporadic co-deployments of mutually exclusive providers. The variants that select
+a single node (`one_layer_mist`, `one_layer_cloud`, RAOM4CC advanced, EdgeWiseCR
+`prolog`) cannot violate the exclusion by construction; their rate equals the
+original feasibility rate. PROMISE remains at 100 % across all applications. The
+remaining 13 techniques stay feasible on the constraints they model but, with the
+exception of the single-node heuristics, lose feasibility once provider
+co-deployment is enforced.
 
 Table 2a reports the recomputed feasibility rate alongside the median node count
 selected by each technique. The node count explains the structural pattern:
@@ -172,21 +179,24 @@ the range reports the minimum and maximum node count across those solutions.
 | `RAOM4CC_best_fit_delay_energy` | RAOM4CC    | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 0.0   | 0.0   | 1 | 1–2 |
 | `RAOM4CC_delay_heuristics`      | RAOM4CC    | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 0.0   | 0.0   | 1 | 1–2 |
 | `RAOM4CC_delay_energy_heuristics` | RAOM4CC  | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 0.0   | 0.0   | 1 | 1–2 |
-| `MS-GD-P`                         | MSGDP    | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 3 | 2–4 |
+| `MS-GD-P`                         | MSGDP    | 10.1 | 5.8  | 12.9 | 17.0 | 11.4  | 10.1  | 2.1   | 3 | 2–4 |
 | `PROMISE`                         | PROMISE      | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 3 | 2–6 |
 
 The progression across the three overall-rate columns tells a single, layered
 story. Under the *provider exclusion* constraint alone, the strategies that
-select more than two nodes lose feasibility (EdgeWiseCR MILP drops to 26–41 %),
-while single-node heuristics remain at 100 % only because the exclusion is vacuous
-for one provider. Activating the *critical device-type* requirement—anything
-deployed for CCTV/VR must include a CAMERA, anything for LiDAR/Robot a SENSOR—
-exposes the single-node artefact immediately: every single-node strategy except
-RAOM4CC `one_layer_mist` (which finds mist-tier SENSOR devices for Robot in 58.3 %
-of those scenarios) collapses from 100 % to 0 %, and EdgeWiseCR MILP falls further
-to 3–9 %. Activating the *full device-type coverage* requirement drives every
-baseline except the occasional EdgeWiseCR MILP `edgewise` variant on LiDAR/Robot
-(<5 %) to zero. PROMISE retains 100 % across all three columns because its solver
+select more than two nodes lose feasibility (EdgeWiseCR MILP drops to 26–41 %,
+MS-GD-P to 11.4 %), while single-node heuristics remain at 100 % only because
+the exclusion is vacuous for one provider. Activating the *critical device-type*
+requirement—anything deployed for CCTV/VR must include a CAMERA, anything for
+LiDAR/Robot a SENSOR—exposes the single-node artefact immediately: every
+single-node strategy except RAOM4CC `one_layer_mist` (which finds mist-tier
+SENSOR devices for Robot in 58.3 % of those scenarios) collapses from 100 % to
+0 %, EdgeWiseCR MILP falls further to 3–9 %, and MS-GD-P holds at 10.1 % because
+its multi-node deployments occasionally include a provider whose catalogue
+offers the critical sensor type. Activating the *full device-type coverage*
+requirement drives every baseline except the occasional EdgeWiseCR MILP
+`edgewise` variant on LiDAR/Robot (<5 %) and sporadic MS-GD-P solutions on CCTV
+(7.1 %) to zero. PROMISE retains 100 % across all three columns because its solver
 co-locates exactly the set of add-ons needed to cover every required device type
 without violating provider exclusions, selecting 2–6 nodes (median 3) per solution.
 
@@ -620,7 +630,7 @@ search space:
 | Strengths | Weaknesses |
 |:----------|:-----------|
 | Sub-millisecond execution (4–5 ms) | Only 6/12 hard constraints |
-| 100 % feasibility on all applications | Ignores provider exclusions |
+| 11.4 % feasibility under provider exclusion | Ignores provider exclusions |
 | Multi-node selection (3 nodes avg) | No optimality guarantee |
 | Genetic algorithm explores diverse solutions | Higher cost than single-node baselines |
 
@@ -638,7 +648,7 @@ infrastructure scale.
 | Offline planning, Robot (≤300 nodes) | PROMISE | Solver time < 1.7 s, full coverage |
 | Offline planning, VR (≤200 nodes) | PROMISE | Solver time < 1 s, full coverage |
 | Real-time, any app, basic constraints | RAOM4CC advanced | Sub-ms execution, 100 % feasibility |
-| Multi-node placement, fast execution | MS-GD-P | 4–5 ms execution, 100 % feasibility, 3 nodes |
+| Multi-node placement, fast execution | MS-GD-P | 4–5 ms execution, 11.4 % feasibility under exclusion, 3 nodes |
 | Large-scale, simplified constraints | EdgeWiseCR MILP | 2–3 ms execution, optimal of simplified model |
 | Single-tier requirement | RAOM4CC `one_layer_edge` | Only single-tier variant with 100 % feasibility on all apps |
 
@@ -667,9 +677,10 @@ infrastructure scale.
    single-layer variant that achieves 100 % feasibility across all four application types.
    Avoid `one_layer_mist` for CCTV, LiDAR, and VR; avoid `one_layer_cloud` for Robot.
 
-7. **For multi-node placement with fast execution:** Use MS-GD-P. It provides 4–5 ms
-   execution, 100 % feasibility, and selects 3 nodes on average, similar to PROMISE's
-   multi-node approach but with faster execution.
+7. **For multi-node placement with fast execution:** Use MS-GD-P with caution. It provides
+   4–5 ms execution and selects 3 nodes on average, similar to PROMISE's multi-node approach,
+   but achieves only 11.4 % feasibility under provider exclusion (2.1 % under full device-type
+   coverage). Solutions require manual validation against provider exclusions before deployment.
 
 8. **For future work:** Investigate hybrid approaches that combine the speed of heuristic
    baselines with the constraint completeness of PROMISE. Constraint propagation and
