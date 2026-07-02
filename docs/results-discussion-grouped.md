@@ -22,6 +22,40 @@ selected node) exceeds PROMISE's by an order of magnitude on large scenarios. Ne
 extreme is comparable to PROMISE's deployable 3–4 node solutions. Section 6 analyses the
 cost data in detail.
 
+## Table of Contents
+
+- [1. Experimental Scope](#1-experimental-scope)
+- [2. Baseline Grouping](#2-baseline-grouping)
+- [3. Feasibility Analysis](#3-feasibility-analysis)
+- [4. Execution Time Analysis](#4-execution-time-analysis)
+  - [4.1 PROMISE Scalability by Application Type](#41-promise-scalability-by-application-type)
+  - [4.2 Baseline Execution Time (Application-Agnostic)](#42-baseline-execution-time-application-agnostic)
+  - [4.3 All Techniques: Time vs Infrastructure Size](#43-all-techniques-time-vs-infrastructure-size)
+  - [4.4 Execution Time by Scenario Scale](#44-execution-time-by-scenario-scale)
+  - [4.5 Statistical Tests](#45-statistical-tests)
+- [5. Node Selection Analysis](#5-node-selection-analysis)
+- [6. Cost Analysis](#6-cost-analysis)
+  - [8.1 Why the Costs Are Not Comparable](#81-why-the-costs-are-not-comparable)
+  - [8.2 PROMISE vs Single-Node Baselines: Deployability Trumps Nominal Cost](#82-promise-vs-single-node-baselines-deployability-trumps-nominal-cost)
+  - [8.3 Conclusion on Cost Comparability](#83-conclusion-on-cost-comparability)
+- [9. Synthesis by Application Type](#9-synthesis-by-application-type)
+- [10. PROMISE's Structural Advantages](#10-promises-structural-advantages)
+  - [10.1 Established Pricing Formalism](#101-established-pricing-formalism)
+  - [10.2 Provider Interoperability Constraints](#102-provider-interoperability-constraints)
+  - [10.3 Feature and Domain Constraints](#103-feature-and-domain-constraints)
+  - [10.4 Subscription and Quantity Constraints](#104-subscription-and-quantity-constraints)
+  - [10.5 Full Solution Space Exploration](#105-full-solution-space-exploration)
+- [10b. Summary Metrics by Technique Group](#10b-summary-metrics-by-technique-group)
+- [11. Strengths and Weaknesses by Technique Group](#11-strengths-and-weaknesses-by-technique-group)
+  - [PROMISE](#promise)
+  - [EdgeWiseCR MILP (`edgewise` variants)](#edgewisecr-milp-edgewise-variants)
+  - [RAOM4CC advanced heuristics (Group B)](#raom4cc-advanced-heuristics-group-b)
+  - [RAOM4CC `one_layer_*` (Group A)](#raom4cc-onelayer-group-a)
+  - [EdgeWiseCR greedy (`prolog` variants)](#edgewisecr-greedy-prolog-variants)
+  - [MS-GD-P](#ms-gd-p)
+- [12. No Absolute Winner](#12-no-absolute-winner)
+- [13. Recommendations](#13-recommendations)
+
 ## 1. Experimental Scope
 
 We generated 9 600 scenarios spanning three infrastructure scales (S, M, L), four
@@ -592,6 +626,152 @@ search space:
 | EdgeWiseCR MILP | Simplified MILP formulation | Optimal of simplified model |
 | EdgeWiseCR greedy | Bin-packing heuristic | None |
 | MS-GD-P | Genetic algorithm (priority-based) | None |
+
+## 10b. Summary Metrics by Technique Group
+
+**Summary metrics: PROMISE**
+
+| Metric | Value |
+|:---|:---|
+| Feasibility (own model) | 100.0 % |
+| Feasibility by app | CCTV 100.0 · LiDAR 100.0 · Robot 100.0 · VR 100.0 % |
+| Feasibility + exclusion | 100.0 % |
+| Feasibility + critical type | 100.0 % |
+| Feasibility + all types | 100.0 % |
+| Time (global median) | 115.6 ms |
+| Time by scale (S / M / L) | 110.6 ms / 215.7 ms / 401.9 ms |
+| Time by app (median) | CCTV 115.7 ms · LiDAR 115.5 ms · Robot 115.6 ms · VR 115.6 ms |
+| Nodes (global median) | 3 |
+| Nodes by app (median) | CCTV 3 · LiDAR 3 · Robot 3 · VR 4 |
+| Nodes (range) | 2 – 6 |
+| Cost CCTV (S / M / L) | 395.20–794.18 / 372.15–408.24 / 372.15–564.42 $ |
+| Cost LiDAR (S / M / L) | 206.46–585.96 / 411.65–751.27 / 411.65–1,607 $ |
+| Cost Robot (S / M / L) | 37.83–58.26 / 52.70–71.04 / 52.70–123.24 $ |
+| Cost VR (S / M / L) | 193.90–344.10 / 188.65–268.90 / 187.70–389.36 $ |
+| Cost vs PROMISE (ratio L) | CCTV 1.0× · LiDAR 1.2× · Robot 1.1× · VR 1.2× |
+| Search strategy | Full constraint satisfaction |
+| Optimality guarantee | Optimal (CP solver) |
+| Constraints modelled | 12/12 |
+
+**Summary metrics: RAOM4CC `one_layer_*`**
+
+| Metric | Value |
+|:---|:---|
+| Feasibility (own model) | 64.6 % |
+| Feasibility by app | CCTV 66.7 · LiDAR 63.9 · Robot 61.1 · VR 66.7 % |
+| Feasibility + exclusion | 63.5 % |
+| Feasibility + critical type | 4.9 % |
+| Feasibility + all types | 0.0 % |
+| Time (global median) | 116 µs |
+| Time by scale (S / M / L) | 78 µs / 142 µs / 428 µs |
+| Time by app (median) | CCTV 122 µs · LiDAR 113 µs · Robot 127 µs · VR 109 µs |
+| Nodes (global median) | 1 |
+| Nodes by app (median) | CCTV 1 · LiDAR 1 · Robot 1 · VR 1 |
+| Nodes (range) | 1 – 3 |
+| Cost CCTV (S / M / L) | 336.05–409.71 / 337.35–391.55 / 247.16–592.97 $ |
+| Cost LiDAR (S / M / L) | 138.55–468.01 / 366.15–615.52 / 366.15–1,626 $ |
+| Cost Robot (S / M / L) | 16.02–32.80 / 18.12–65.25 / 18.90–95.50 $ |
+| Cost VR (S / M / L) | 135.15–165.31 / 135.15–152.82 / 135.15–221.77 $ |
+| Cost vs PROMISE (ratio L) | CCTV 0.9× · LiDAR 1.0× · Robot 0.6× · VR 0.7× |
+| Search strategy | Single-tier greedy first-fit |
+| Optimality guarantee | None |
+| Constraints modelled | 6/12 |
+
+**Summary metrics: RAOM4CC advanced**
+
+| Metric | Value |
+|:---|:---|
+| Feasibility (own model) | 100.0 % |
+| Feasibility by app | CCTV 100.0 · LiDAR 100.0 · Robot 100.0 · VR 100.0 % |
+| Feasibility + exclusion | 99.7 % |
+| Feasibility + critical type | 0.0 % |
+| Feasibility + all types | 0.0 % |
+| Time (global median) | 440 µs |
+| Time by scale (S / M / L) | 305 µs / 585 µs / 7.6 ms |
+| Time by app (median) | CCTV 446 µs · LiDAR 551 µs · Robot 196 µs · VR 534 µs |
+| Nodes (global median) | 1 |
+| Nodes by app (median) | CCTV 1 · LiDAR 1 · Robot 1 · VR 1 |
+| Nodes (range) | 1 – 3 |
+| Cost CCTV (S / M / L) | 336.05–352.17 / 337.35–342.96 / 247.16–423.06 $ |
+| Cost LiDAR (S / M / L) | 138.55–412.95 / 366.15–579.65 / 366.15–1,658 $ |
+| Cost Robot (S / M / L) | 16.02–20.43 / 18.12–26.82 / 18.90–52.92 $ |
+| Cost VR (S / M / L) | 135.15–136.59 / 135.15–150.30 / 135.15–211.46 $ |
+| Cost vs PROMISE (ratio L) | CCTV 0.9× · LiDAR 1.0× · Robot 0.4× · VR 0.7× |
+| Search strategy | Heuristic ordering + greedy selection |
+| Optimality guarantee | None |
+| Constraints modelled | 6/12 |
+
+**Summary metrics: EdgeWiseCR greedy**
+
+| Metric | Value |
+|:---|:---|
+| Feasibility (own model) | 100.0 % |
+| Feasibility by app | CCTV 100.0 · LiDAR 100.0 · Robot 100.0 · VR 100.0 % |
+| Feasibility + exclusion | 100.0 % |
+| Feasibility + critical type | 0.0 % |
+| Feasibility + all types | 0.0 % |
+| Time (global median) | 601 µs |
+| Time by scale (S / M / L) | 533 µs / 1.1 ms / 2.5 ms |
+| Time by app (median) | CCTV 619 µs · LiDAR 609 µs · Robot 545 µs · VR 616 µs |
+| Nodes (global median) | 1 |
+| Nodes by app (median) | CCTV 1 · LiDAR 1 · Robot 1 · VR 1 |
+| Nodes (range) | 1 – 2 |
+| Cost CCTV (S / M / L) | 337.35–409.71 / 358.78–367.74 / 289.49–459.92 $ |
+| Cost LiDAR (S / M / L) | 166.31–468.01 / 437.31–615.52 / 437.31–1,552 $ |
+| Cost Robot (S / M / L) | 15.24–20.43 / 15.80–28.83 / 16.21–59.28 $ |
+| Cost VR (S / M / L) | 135.15–165.31 / 155.26–170.50 / 155.26–232.36 $ |
+| Cost vs PROMISE (ratio L) | CCTV 0.9× · LiDAR 1.1× · Robot 0.4× · VR 0.8× |
+| Search strategy | Bin-packing heuristic |
+| Optimality guarantee | None |
+| Constraints modelled | 6/12 |
+
+**Summary metrics: EdgeWiseCR MILP**
+
+| Metric | Value |
+|:---|:---|
+| Feasibility (own model) | 100.0 % |
+| Feasibility by app | CCTV 100.0 · LiDAR 100.0 · Robot 100.0 · VR 100.0 % |
+| Feasibility + exclusion | 30.9 % |
+| Feasibility + critical type | 5.2 % |
+| Feasibility + all types | 1.4 % |
+| Time (global median) | 2.4 ms |
+| Time by scale (S / M / L) | 2.1 ms / 3.1 ms / 8.8 ms |
+| Time by app (median) | CCTV 2.6 ms · LiDAR 2.5 ms · Robot 2.0 ms · VR 2.4 ms |
+| Nodes (global median) | 6 |
+| Nodes by app (median) | CCTV 6 · LiDAR 4 · Robot 3 · VR 6 |
+| Nodes (range) | 1 – 10 |
+| Cost CCTV (S / M / L) | 336.05–339.71 / 337.35–342.96 / 247.16–423.06 $ |
+| Cost LiDAR (S / M / L) | 136.31–398.01 / 366.15–545.52 / 366.15–1,482 $ |
+| Cost Robot (S / M / L) | 15.15–20.43 / 15.50–26.82 / 15.75–52.92 $ |
+| Cost VR (S / M / L) | 135.15–135.31 / 135.15–150.30 / 135.15–211.46 $ |
+| Cost vs PROMISE (ratio L) | CCTV 0.9× · LiDAR 1.0× · Robot 0.4× · VR 0.7× |
+| Search strategy | Simplified MILP formulation |
+| Optimality guarantee | Optimal of simplified model |
+| Constraints modelled | 6/12 |
+
+**Summary metrics: MS-GD-P**
+
+| Metric | Value |
+|:---|:---|
+| Feasibility (own model) | 97.8 % |
+| Feasibility by app | CCTV 100.0 · LiDAR 94.6 · Robot 100.0 · VR 96.4 % |
+| Feasibility + exclusion | 11.8 % |
+| Feasibility + critical type | 5.9 % |
+| Feasibility + all types | 2.1 % |
+| Time (global median) | 4.2 ms |
+| Time by scale (S / M / L) | 3.8 ms / 5.3 ms / 11.4 ms |
+| Time by app (median) | CCTV 4.2 ms · LiDAR 4.3 ms · Robot 4.2 ms · VR 4.2 ms |
+| Nodes (global median) | 16 |
+| Nodes by app (median) | CCTV 12 · LiDAR 14 · Robot 20 · VR 16 |
+| Nodes (range) | 3 – 80 |
+| Cost CCTV (S / M / L) | 451.30–1,874 / 897.88–3,848 / 4,862–12,203 $ |
+| Cost LiDAR (S / M / L) | 217.99–1,763 / 1,361–5,351 / 6,430–13,750 $ |
+| Cost Robot (S / M / L) | 61.00–117.17 / 348.03–487.26 / 466.32–1,766 $ |
+| Cost VR (S / M / L) | 172.75–485.87 / 721.11–2,152 / 2,441–7,408 $ |
+| Cost vs PROMISE (ratio L) | CCTV 17.0× · LiDAR 19.5× · Robot 20.7× · VR 20.9× |
+| Search strategy | Genetic algorithm (priority-based) |
+| Optimality guarantee | None |
+| Constraints modelled | 6/12 |
 
 ## 11. Strengths and Weaknesses by Technique Group
 
