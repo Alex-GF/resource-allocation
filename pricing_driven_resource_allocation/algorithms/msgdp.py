@@ -23,6 +23,8 @@ DEFAULT_SERVICE_PROFILES: Dict[str, Dict[str, float]] = {
     "mixed_reality": {"cost": 300, "density_centers": 2, "radius": 40.0},
     "vr": {"cost": 300, "density_centers": 1, "radius": 40.0},
     "computer_vision": {"cost": 400, "density_centers": 3, "radius": 50.0},
+    "cctv": {"cost": 400, "density_centers": 3, "radius": 50.0},
+    "lidar": {"cost": 350, "density_centers": 2, "radius": 45.0},
 }
 
 
@@ -292,51 +294,36 @@ def calculate_topology_cost(df_topology,selected_devices,resource_demands):
     # 3. Filter the topology for selected devices
     df_selected = df_topology[df_topology.index.isin(selected_devices)].copy()
 
-    # 4. Optimize and Calculate Cost
-    total_cost = 0.0
-    allocation_summary = {}
-
-    # print("--- Resource Allocation Breakdown ---")
-
+    # 4. Check that selected devices can collectively cover every resource demand
     for resource, demand in resource_demands.items():
         if demand <= 0:
             continue
+        if df_selected[resource].sum() < demand:
+            raise RuntimeWarning("Not sufficient Resources")
 
-        price_col = f"unit_price_{resource}"
+    # 5. Fixed-charge cost model: each selected node is billed
+    #    unit_price * min(demand, capacity) per resource, summed over ALL
+    #    selected nodes.  This mirrors PROMISE's resolve_price (see
+    #    generators/problem_instance.py), so that selecting more nodes
+    #    proportionally increases the reported cost.
+    total_cost = 0.0
+    allocation_summary = {}
 
-        # Sort devices by the cheapest unit price for this specific resource
-        df_sorted = df_selected.sort_values(by=price_col)
+    for _, device in df_selected.iterrows():
+        for resource, demand in resource_demands.items():
+            if demand <= 0:
+                continue
 
-        allocated_for_resource = 0
-        resource_cost = 0.0
-
-        for _, device in df_sorted.iterrows():
-            if allocated_for_resource >= demand:
-                break
-
-            # dev_id = device.name
-            available = device[resource]
+            price_col = f"unit_price_{resource}"
+            capacity = device[resource]
             price = device[price_col]
 
-            # Determine how much to take from this device
-            needed = demand - allocated_for_resource
-            taken = min(available, needed)
+            used = min(demand, capacity)
+            if used > 0:
+                node_cost = used * price
+                total_cost += node_cost
+                allocation_summary.setdefault(resource, {'allocated': 0.0, 'cost': 0.0})
+                allocation_summary[resource]['allocated'] += used
+                allocation_summary[resource]['cost'] += node_cost
 
-            if taken > 0:
-                cost = taken * price
-                resource_cost += cost
-                allocated_for_resource += taken
-                # print(f"Resource '{resource}': Took {taken} from Device {dev_id} @ ${price}/unit (Cost: ${cost:.4f})")
-
-        # Check if we fulfilled the demand
-        if allocated_for_resource < demand:
-            raise RuntimeWarning("Not sufficient Resources")
-            print(
-                f"⚠️ WARNING: Insufficient resources for {resource}. Demanded: {demand}, Fulfilled: {allocated_for_resource}")
-
-        total_cost += resource_cost
-        allocation_summary[resource] = {'allocated': allocated_for_resource, 'cost': resource_cost}
-
-    # print("-------------------------------------")
-    # print(f"Total Optimized Cost: ${total_cost:.4f}")
     return total_cost

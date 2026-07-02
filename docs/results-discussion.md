@@ -15,11 +15,12 @@ that follows.
 started_at`), excluding HTTP overhead (~1.4 % of wall clock).
 
 **Cost note.** Cost comparison between PROMISE and the baselines is not meaningful. The
-baselines model only 6 of 12 hard constraint types and may produce solutions that violate
-provider exclusions, feature requirements, subscription constraints, and other requirements
-that PROMISE enforces. Their cost figures reflect incomplete constraint satisfaction and are
-not directly comparable. Section 8 analyses the cost data in detail and explains why the
-raw numbers favour the baselines without contradicting PROMISE's deployability advantage.
+single-node baselines model only 6 of 12 hard constraint types, select one device, and report
+incomplete costs that under-count the constraints PROMISE enforces. MS-GD-P, conversely,
+selects 12–80 nodes—far more than necessary—and its fixed-charge cost (summed over every
+selected node) exceeds PROMISE's by an order of magnitude on large scenarios. Neither
+extreme is comparable to PROMISE's deployable 3–4 node solutions. Section 5 analyses the
+cost data in detail.
 
 ## 1. Experimental Scope
 
@@ -128,20 +129,23 @@ the range reports the minimum and maximum node count across those solutions.
 | EdgeWiseCR_edgewise | 33.3 | 8.3 | 29.2 | 33.3 | 26.0 | 3.1 | 2.1 | 6 | 1–10 |
 | EdgeWiseCR_edgewise_cr | 33.3 | 8.3 | 29.2 | 33.3 | 26.0 | 3.1 | 2.1 | 6 | 1–10 |
 | EdgeWiseCR_edgewise_num | 33.3 | 29.2 | 66.7 | 33.3 | 40.6 | 9.4 | 0.0 | 6 | 1–10 |
-| MS-GD-P | 10.1 | 5.8 | 12.9 | 17.0 | 11.4 | 10.1 | 2.1 | 20 | 3–100 |
+| MS-GD-P | 9.0 | 8.7 | 13.1 | 16.5 | 11.8 | 5.9 | 2.1 | 16 | 3–80 |
 
 The progression across the three overall-rate columns tells a single, layered
 story. Under the *provider exclusion* constraint alone, the strategies that
-select more than two nodes lose feasibility (EdgeWiseCR MILP drops to 26–41 %),
-while single-node heuristics remain at 100 % only because the exclusion is vacuous
-for one provider. Activating the *critical device-type* requirement—anything
-deployed for CCTV/VR must include a CAMERA, anything for LiDAR/Robot a SENSOR—
-exposes the single-node artefact immediately: every single-node strategy except
-RAOM4CC `one_layer_mist` (which finds mist-tier SENSOR devices for Robot in 58.3 %
-of those scenarios) collapses from 100 % to 0 %, and EdgeWiseCR MILP falls further
-to 3–9 %. Activating the *full device-type coverage* requirement drives every
-baseline except the occasional EdgeWiseCR MILP `edgewise` variant on LiDAR/Robot
-(<5 %) to zero. PROMISE retains 100 % across all three columns because its solver
+select more than two nodes lose feasibility (EdgeWiseCR MILP drops to 26–41 %,
+MS-GD-P to 11.8 %), while single-node heuristics remain at 100 % only because
+the exclusion is vacuous for one provider. Activating the *critical device-type*
+requirement—anything deployed for CCTV/VR must include a CAMERA, anything for
+LiDAR/Robot a SENSOR—exposes the single-node artefact immediately: every
+single-node strategy except RAOM4CC `one_layer_mist` (which finds mist-tier SENSOR
+devices for Robot in 58.3 % of those scenarios) collapses from 100 % to 0 %,
+EdgeWiseCR MILP falls further to 3–9 %, and MS-GD-P drops to 5.9 % because
+its multi-node deployments occasionally include a device whose
+offers the critical sensor type. Activating the *full device-type coverage*
+requirement drives every baseline except the occasional EdgeWiseCR MILP
+`edgewise` variant on LiDAR/Robot (<5 %) and sporadic MS-GD-P solutions on CCTV
+(7.3 %) to zero. PROMISE retains 100 % across all three columns because its solver
 co-locates exactly the set of add-ons needed to cover every required device type
 without violating provider exclusions, selecting 2–6 nodes (median 3) per solution.
 
@@ -223,7 +227,7 @@ per scale (S / M / L) — and each cell reports the median flanked by the observ
 | EdgeWiseCR_edgewise | 2.3e-3 [9.9e-4–4.6e-3] | 3.7e-3 [2.1e-3–2.6e-2] | 1.3e-2 [1.9e-3–6.4e-2] | 2.1e-3 [7.5e-4–4.2e-3] | 3.4e-3 [1.9e-3–2.5e-2] | 8.0e-3 [1.9e-3–2.8e-2] | 1.6e-3 [7.0e-4–3.5e-3] | 3.0e-3 [1.5e-3–2.4e-2] | 9.6e-3 [1.3e-3–4.9e-2] | 2.3e-3 [9.5e-4–2.3e-2] | 3.4e-3 [2.0e-3–2.7e-2] | 1.4e-2 [2.1e-3–6.2e-2] |
 | EdgeWiseCR_edgewise_cr | 2.4e-3 [1.0e-3–4.7e-3] | 3.8e-3 [2.2e-3–2.7e-2] | 1.4e-2 [2.0e-3–6.5e-2] | 2.2e-3 [7.6e-4–4.3e-3] | 3.5e-3 [2.0e-3–2.6e-2] | 8.2e-3 [2.0e-3–2.9e-2] | 1.7e-3 [7.1e-4–3.6e-3] | 3.1e-3 [1.6e-3–2.5e-2] | 9.8e-3 [1.4e-3–5.0e-2] | 2.4e-3 [9.6e-4–2.4e-2] | 3.5e-3 [2.1e-3–2.8e-2] | 1.4e-2 [2.2e-3–6.3e-2] |
 | EdgeWiseCR_edgewise_num | 2.5e-3 [1.1e-3–4.8e-3] | 3.9e-3 [2.3e-3–2.8e-2] | 1.4e-2 [2.1e-3–6.6e-2] | 2.3e-3 [7.7e-4–4.4e-3] | 3.6e-3 [2.1e-3–2.7e-2] | 8.3e-3 [2.1e-3–3.0e-2] | 1.7e-3 [7.2e-4–3.7e-3] | 3.2e-3 [1.7e-3–2.6e-2] | 1.0e-2 [1.5e-3–5.1e-2] | 2.5e-3 [9.7e-4–2.5e-2] | 3.6e-3 [2.2e-3–2.9e-2] | 1.5e-2 [2.3e-3–6.4e-2] |
-| MS-GD-P | 4.3e-3 [3.2e-3–5.5e-3] | 4.5e-3 [3.4e-3–5.7e-3] | 4.8e-3 [3.6e-3–6.0e-3] | 4.7e-3 [3.5e-3–5.9e-3] | 4.8e-3 [3.6e-3–6.0e-3] | 5.0e-3 [3.8e-3–6.2e-3] | 4.2e-3 [3.1e-3–5.4e-3] | 4.4e-3 [3.3e-3–5.6e-3] | 4.6e-3 [3.4e-3–5.8e-3] | 4.4e-3 [3.3e-3–5.6e-3] | 4.6e-3 [3.4e-3–5.8e-3] | 4.8e-3 [3.6e-3–6.0e-3] |
+| MS-GD-P | 3.9e-3 [3.0e-3–4.7e-3] | 5.4e-3 [3.9e-3–1.4e-2] | 1.1e-2 [4.0e-3–2.9e-2] | 3.8e-3 [3.0e-3–4.7e-3] | 5.0e-3 [3.9e-3–1.3e-2] | 1.1e-2 [4.1e-3–1.8e-2] | 3.8e-3 [3.0e-3–4.6e-3] | 5.2e-3 [4.0e-3–2.9e-2] | 1.2e-2 [4.0e-3–4.5e-2] | 3.8e-3 [3.0e-3–4.6e-3] | 4.9e-3 [3.9e-3–1.3e-2] | 1.3e-2 [4.1e-3–3.0e-2] |
 
 **Table 4a.** Global execution time (seconds) aggregated over all four applications, by
 technique and scenario scale. Cells report `median [min–max]`.
@@ -246,7 +250,7 @@ technique and scenario scale. Cells report `median [min–max]`.
 | EdgeWiseCR_edgewise | 2.1e-3 [7.0e-4–2.3e-2] | 3.1e-3 [1.5e-3–2.7e-2] | 8.8e-3 [1.3e-3–6.4e-2] |
 | EdgeWiseCR_edgewise_cr | 2.2e-3 [7.1e-4–2.4e-2] | 3.2e-3 [1.6e-3–2.8e-2] | 9.0e-3 [1.4e-3–6.5e-2] |
 | EdgeWiseCR_edgewise_num | 2.3e-3 [7.2e-4–2.5e-2] | 3.3e-3 [1.7e-3–2.9e-2] | 9.2e-3 [1.5e-3–6.6e-2] |
-| MS-GD-P | 4.4e-3 [3.1e-3–5.9e-3] | 4.6e-3 [3.3e-3–6.0e-3] | 4.8e-3 [3.4e-3–6.2e-3] |
+| MS-GD-P | 3.8e-3 [3.0e-3–4.7e-3] | 5.3e-3 [3.9e-3–2.9e-2] | 1.1e-2 [4.0e-3–4.5e-2] |
 
 At small scale, every technique's interval is tight and the medians cluster within two
 orders of magnitude (PROMISE 0.098 s vs. RAOM4CC `one_layer_*` 7.8e-5 s). From medium
@@ -323,13 +327,16 @@ solutions only).
 | EdgeWiseCR_edgewise | 6 | 4 | 3 | 6 |
 | EdgeWiseCR_edgewise_cr | 6 | 4 | 3 | 6 |
 | EdgeWiseCR_edgewise_num | 6 | 4 | 6 | 6 |
-| MS-GD-P | 20 | 20 | 20 | 16 |
+| MS-GD-P | 12 | 14 | 20 | 16 |
 
 All RAOM4CC and EdgeWiseCR greedy variants select a single node regardless of workload,
 because their greedy and single-layer strategies co-locate resources on the first feasible
 device. EdgeWiseCR MILP selects more nodes on CCTV and VR (median 6) than on LiDAR (4) or
 Robot (3–6 depending on variant), because the MILP formulation distributes demand across many small contributions
-when the workload's resource profile benefits from aggregation. PROMISE selects 3 nodes for
+when the workload's resource profile benefits from aggregation. MS-GD-P selects 12–20 nodes
+(median 16 overall), far more than any other technique, because its genetic algorithm
+maximises user coverage by deploying many service instances across the topology without
+regard for cost minimisation. PROMISE selects 3 nodes for
 CCTV, LiDAR, and Robot, and 4 for VR, reflecting the constraint solver's balancing of cost
 minimisation against feature coverage and provider exclusion constraints.
 
@@ -372,7 +379,7 @@ applications.
 | EdgeWiseCR_edgewise | 336.05–339.71 | 337.35–342.95 | 247.16–423.06 | 136.31–398.01 | 366.15–545.52 | 366.15–1481.64 | 15.15–20.43 | 15.50–26.82 | 15.75–52.92 | 135.15–135.31 | 135.15–150.30 | 135.15–211.46 |
 | EdgeWiseCR_edgewise_cr | 336.05–339.71 | 337.35–342.95 | 247.16–423.06 | 136.31–398.01 | 366.15–545.52 | 366.15–1481.64 | 15.15–20.43 | 15.50–26.82 | 15.75–52.92 | 135.15–135.31 | 135.15–150.30 | 135.15–211.46 |
 | EdgeWiseCR_edgewise_num | 336.05–339.71 | 337.35–342.95 | 247.16–423.06 | 136.31–398.01 | 366.15–545.52 | 366.15–1481.64 | 15.15–20.43 | 15.50–26.82 | 15.75–52.92 | 135.15–135.31 | 135.15–150.30 | 135.15–211.46 |
-| MS-GD-P | 135.31–165.31 | 135.31–165.31 | 135.31–165.31 | 135.31–165.31 | 135.31–165.31 | 135.31–165.31 | 135.31–165.31 | 135.31–165.31 | 135.31–165.31 | 135.31–165.31 | 135.31–165.31 | 135.31–165.31 |
+| MS-GD-P | 451.30–1874.34 | 897.88–3848.03 | 4861.58–12202.80 | 217.99–1763.33 | 1361.31–5350.88 | 6429.50–13750.43 | 61.00–117.17 | 348.03–487.26 | 466.32–1765.92 | 172.75–485.87 | 721.11–2152.12 | 2441.42–7407.65 |
 
 **Table 6a.** Global solution-cost range (min–max, $) aggregated over all four
 applications, by technique and scenario scale.
@@ -395,21 +402,26 @@ applications, by technique and scenario scale.
 | EdgeWiseCR_edgewise | 15.15–398.01 | 15.50–545.52 | 15.75–1481.64 |
 | EdgeWiseCR_edgewise_cr | 15.15–398.01 | 15.50–545.52 | 15.75–1481.64 |
 | EdgeWiseCR_edgewise_num | 15.15–398.01 | 15.50–545.52 | 15.75–1481.64 |
-| MS-GD-P | 135.31–165.31 | 135.31–165.31 | 135.31–165.31 |
+| MS-GD-P | 61.00–1874.34 | 348.03–5350.88 | 466.32–13750.43 |
 
 The range disaggregation confirms three regularities. First, every technique's cost range
-widens from S to L on LiDAR and VR—the two applications with the highest user counts—
-because larger user populations raise demand and admit richer (and pricier) infrastructures.
-LiDAR shows the steepest widening: PROMISE's maximum rises from $585.96 (S) to $1607.49 (L),
-a 2.7× increase, and EdgeWiseCR greedy nearly doubles from $468.01 to $1551.64. Second,
-CCTV and Robot ranges are comparatively scale-invariant: CCTV maximums stay within
-$343–$564 for PROMISE and $340–$460 across baselines, and Robot remains under $60 for all
-techniques except at the highest Robot (L) configurations. Third, PROMISE's lower bound is
-consistently at or above the baselines' lower bound on every app and scale combination,
-while PROMISE's upper bound typically exceeds the baselines' upper bound—especially on LiDAR
-(L), where PROMISE reaches $1607.49 against the baselines' $1481–$1658. The global table
-confirms that PROMISE occupies the high-cost tail of every scale band, reflecting the
-deployability premium its constraint coverage commands rather than an efficiency deficit.
+widens from S to L—the two applications with the highest user counts see the steepest
+widening because larger user populations raise demand and admit richer (and pricier)
+infrastructures. MS-GD-P shows the most dramatic scaling: its LiDAR costs rise from
+$217.99–$1 763.33 (S) to $6 429.50–$13 750.43 (L), and CCTV from $451.30–$1 874.34 (S) to
+$4 861.58–$12 202.80 (L), because it selects up to 80 nodes at large scale and the
+fixed-charge model bills each one. PROMISE's LiDAR maximum rises from $585.96 (S) to
+$1 607.49 (L), a 2.7× increase, and EdgeWiseCR greedy nearly doubles from $468.01 to
+$1 551.64. Second, CCTV and Robot ranges are comparatively scale-invariant for the
+single-node baselines: CCTV maximums stay within $340–$460 and Robot remains under $60,
+except for MS-GD-P which reaches $12 202.80 (CCTV L) and $1 765.92 (Robot L). Third, the
+single-node baselines' lower bound is consistently below PROMISE's, while MS-GD-P's upper
+bound consistently exceeds PROMISE's—by up to 24× on CCTV (L) and 8.5× on LiDAR (L).
+PROMISE occupies the middle of the cost distribution: more expensive than the single-node
+baselines (which under-count constraints) but far cheaper than MS-GD-P (which over-provisions
+nodes). The global table confirms that MS-GD-P occupies the extreme high-cost tail at every
+scale band ($13 750.43 at L vs. PROMISE's $1 607.49), reflecting the cost penalty of
+deploying many more nodes than the workload requires.
 
 ### 5.1 Why the Costs Are Not Comparable
 
@@ -429,9 +441,12 @@ cost difference is the price of deployability.
 `prolog`) select exactly one node on every feasible scenario. A single-node solution
 concentrates all demand on one device and reports only that device's price. PROMISE
 selects 3–4 nodes to satisfy feature and exclusion constraints, and its reported cost
-is the sum of all selected nodes' prices. The cost comparison therefore confounds
-constraint satisfaction with infrastructure quantity: the baselines report the cost
-of one device, PROMISE reports the cost of a deployable deployment.
+is the sum of all selected nodes' prices. MS-GD-P selects 12–80 nodes (median 16),
+inflating its reported cost far above PROMISE because the fixed-charge model bills every
+selected node for its resource contribution. The cost comparison therefore confounds
+constraint satisfaction with infrastructure quantity: the single-node baselines report
+the cost of one device, PROMISE reports the cost of a deployable deployment, and MS-GD-P
+reports the cost of a heavily over-provisioned deployment.
 
 **Factor 3: Pricing formalism.** PROMISE uses symbolic price expressions from the iPricing
 model, which account for subscription minimums, usage limits, and renewable/non-renewable
@@ -471,19 +486,23 @@ close to the single-node baselines, because its MILP formulation minimises cost 
 simplified constraint set. Its solutions are more richly structured than single-node
 baselines but still violate the six constraints it does not model. It is the strongest
 baseline on raw cost, but its cost advantage disappears when the missing constraints are
-enforced.
+enforced. MS-GD-P sits at the opposite extreme: by selecting 12–80 nodes without cost
+optimimisation, it reports the highest costs of any technique—up to $13 750.43 on LiDAR
+(L), 8.5× more than PROMISE on the same scenarios. Its genetic algorithm maximises user
+coverage rather than minimising deployment cost, illustrating that coverage-driven
+placement without price awareness leads to severe over-provisioning.
 
 ### 5.3 Conclusion on Cost Comparability
 
-We conclude that the cost figures across techniques are not comparable. The baselines
-report lower costs because they solve a relaxed problem: they ignore six hard constraint
-types, select fewer nodes, and use a simplified pricing model. PROMISE solves the full
-problem and reports the cost of a deployable solution. The apparent cost advantage of the
-baselines is an artefact of constraint relaxation, not an efficiency gain. PROMISE's higher
-nominal cost is the true cost of a production-ready deployment, and its multi-node
-solutions provide the structural coverage—provider compatibility, feature satisfaction,
-subscription compliance—that single-node baselines cannot achieve regardless of the cost
-they report.
+We conclude that the cost figures across techniques are not comparable. The single-node
+baselines report lower costs because they solve a relaxed problem: they ignore six hard
+constraint types, select one node, and use a simplified pricing model. MS-GD-P reports the
+highest costs because it over-provisions nodes without price optimisation. PROMISE solves
+the full problem, selects 3–4 nodes, and reports the cost of a deployable solution that is
+both constraint-complete and cost-aware. The apparent cost advantage of the single-node
+baselines is an artefact of constraint relaxation; the cost penalty of MS-GD-P is an
+artefact of coverage maximisation without cost awareness. PROMISE's intermediate cost
+position reflects the true cost of a production-ready deployment.
 
 ## 6. Synthesis by Application Type
 
@@ -501,7 +520,7 @@ appropriate to that workload.
 | **PROMISE cost (median $)** | 396.67 | 493.91 | 53.62 | 198.70 |
 | **Cheapest baseline cost ($)** | 337.35 | 367.31 | 18.87 | 135.15 |
 | **PROMISE nodes (median)** | 3 | 3 | 3 | 4 |
-| **MS-GD-P nodes (median)** | 20 | 20 | 20 | 16 |
+| **MS-GD-P nodes (median)** | 12 | 14 | 20 | 16 |
 | **Baseline feasibility failure** | RAOM4CC_one_layer_mist (0 %) | RAOM4CC_one_layer_mist (0 %), RAOM4CC_one_layer_cloud (91.7 %) | RAOM4CC_one_layer_cloud (0 %), RAOM4CC_one_layer_mist (83.3 %) | RAOM4CC_one_layer_mist (0 %) |
 | **EW MILP nodes (median)** | 6 | 4 | 3 | 6 |
 | **PROMISE/baseline speed gap** | 1 072× | 949× | 1 045× | 1 201× |
@@ -722,10 +741,10 @@ search space:
 
 | Strengths | Weaknesses |
 |:----------|:-----------|
-| Millisecond execution (4–5 ms) | Only 6/12 hard constraints |
-| 11.4 % feasibility under provider exclusion | Ignores provider exclusions |
-| Multi-node selection (~20 nodes avg) | No optimality guarantee |
-| Genetic algorithm explores diverse solutions | Higher cost than single-node baselines |
+| Millisecond execution (4–11 ms) | Only 6/12 hard constraints |
+| 11.8 % feasibility under provider exclusion | Ignores provider exclusions |
+| Multi-node selection (~21 nodes avg) | No optimality guarantee |
+| Genetic algorithm explores diverse solutions | Highest cost of all techniques (over-provisioning) |
 
 ## 9. No Absolute Winner
 
@@ -741,7 +760,7 @@ infrastructure scale.
 | Offline planning, Robot (≤300 nodes) | PROMISE | Solver time < 1.7 s, full coverage |
 | Offline planning, VR (≤200 nodes) | PROMISE | Solver time < 1 s, full coverage |
 | Real-time, any app, basic constraints | RAOM4CC advanced | Sub-ms execution, 100 % feasibility |
-| Multi-node placement, fast execution | MS-GD-P | 4–5 ms execution, 11.4 % feasibility under exclusion, ~20 nodes |
+| Multi-node placement, fast execution | MS-GD-P | 4–11 ms execution, 11.8 % feasibility under exclusion, ~21 nodes |
 | Large-scale, simplified constraints | EdgeWiseCR MILP | 2–3 ms execution, optimal of simplified model |
 | Single-tier requirement | RAOM4CC_one_layer_edge | Only single-tier variant with 100 % feasibility on all apps |
 
@@ -771,9 +790,11 @@ infrastructure scale.
    Avoid RAOM4CC_one_layer_mist for CCTV, LiDAR, and VR; avoid RAOM4CC_one_layer_cloud for
    Robot.
 
-7. **For multi-node placement with fast execution:** Use MS-GD-P. It provides 4–5 ms
-   execution with 11.4 % feasibility under provider exclusion constraints, and selects ~20 nodes
-   on average—significantly more than PROMISE's 3–4 node solutions.
+7. **For multi-node placement with fast execution:** Use MS-GD-P with caution. It provides
+   4–11 ms execution and selects 12–80 nodes (median 16)—far more than PROMISE's 3–4 node
+   solutions—at 11.8 % feasibility under provider exclusion (2.1 % under full device-type
+   coverage). Its cost is the highest of all techniques due to over-provisioning. Solutions
+   require manual validation against provider exclusions before deployment.
 
 8. **For future work:** Investigate hybrid approaches that combine the speed of heuristic
    baselines with the constraint completeness of PROMISE. Constraint propagation and
