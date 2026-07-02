@@ -179,7 +179,7 @@ the range reports the minimum and maximum node count across those solutions.
 | `RAOM4CC_best_fit_delay_energy` | RAOM4CC    | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 0.0   | 0.0   | 1 | 1–2 |
 | `RAOM4CC_delay_heuristics`      | RAOM4CC    | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 0.0   | 0.0   | 1 | 1–2 |
 | `RAOM4CC_delay_energy_heuristics` | RAOM4CC  | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 0.0   | 0.0   | 1 | 1–2 |
-| `MS-GD-P`                         | MSGDP    | 10.1 | 5.8  | 12.9 | 17.0 | 11.4  | 10.1  | 2.1   | 3 | 2–4 |
+| `MS-GD-P`                         | MSGDP    | 10.1 | 5.8  | 12.9 | 17.0 | 11.4  | 10.1  | 2.1   | 20 | 3–100 |
 | `PROMISE`                         | PROMISE      | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 3 | 2–6 |
 
 The progression across the three overall-rate columns tells a single, layered
@@ -361,7 +361,7 @@ solutions only).
 | RAOM4CC advanced | 1 | 1 | 1 | 1 |
 | EdgeWiseCR greedy | 1 | 1 | 1 | 1 |
 | EdgeWiseCR MILP | 6 | 4 | 3 | 6 |
-| MS-GD-P | 3 | 3 | 3 | 3 |
+| MS-GD-P | 20 | 20 | 20 | 16 |
 | PROMISE | 3 | 3 | 3 | 4 |
 
 All RAOM4CC and EdgeWiseCR greedy variants select a single node regardless of workload,
@@ -395,7 +395,7 @@ applications.
 
 | Technique | CCTV (S) | CCTV (M) | CCTV (L) | LiDAR (S) | LiDAR (M) | LiDAR (L) | Robot (S) | Robot (M) | Robot (L) | VR (S) | VR (M) | VR (L) |
 |:----------|:--------:|:--------:|:--------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:------:|:------:|:------:|
-| PRIME | 395.19–794.18 | 372.15–408.25 | 372.15–564.42 | 206.46–585.96 | 411.65–751.27 | 411.65–1607.49 | 37.83–58.26 | 52.70–71.04 | 52.70–123.24 | 193.90–344.10 | 188.65–268.90 | 187.70–389.37 |
+| PROMISE | 395.19–794.18 | 372.15–408.25 | 372.15–564.42 | 206.46–585.96 | 411.65–751.27 | 411.65–1607.49 | 37.83–58.26 | 52.70–71.04 | 52.70–123.24 | 193.90–344.10 | 188.65–268.90 | 187.70–389.37 |
 | RAOM4CC advanced | 336.05–352.17 | 337.35–342.95 | 247.16–423.06 | 138.55–412.95 | 366.15–579.65 | 366.15–1658.00 | 16.02–20.43 | 18.12–26.82 | 18.90–52.92 | 135.15–136.59 | 135.15–150.30 | 135.15–211.46 |
 | RAOM4CC `one_layer_*` | 336.05–409.71 | 337.35–391.55 | 247.16–592.97 | 138.55–468.01 | 366.15–615.52 | 366.15–1626.24 | 16.02–32.80 | 18.12–65.25 | 18.90–95.50 | 135.15–165.31 | 135.15–152.82 | 135.15–221.77 |
 | EdgeWiseCR MILP | 336.05–339.71 | 337.35–342.95 | 247.16–423.06 | 136.31–398.01 | 366.15–545.52 | 366.15–1481.64 | 15.15–20.43 | 15.50–26.82 | 15.75–52.92 | 135.15–135.31 | 135.15–150.30 | 135.15–211.46 |
@@ -407,7 +407,7 @@ applications, by technique group and scenario scale.
 
 | Technique | S (all apps) | M (all apps) | L (all apps) |
 |:----------|:------------:|:------------:|:------------:|
-| PRIME | 37.83–794.18 | 52.70–751.27 | 52.70–1607.49 |
+| PROMISE | 37.83–794.18 | 52.70–751.27 | 52.70–1607.49 |
 | RAOM4CC advanced | 16.02–412.95 | 18.12–579.65 | 18.90–1658.00 |
 | RAOM4CC `one_layer_*` | 16.02–468.01 | 18.12–615.52 | 18.90–1626.24 |
 | EdgeWiseCR MILP | 15.15–398.01 | 15.50–545.52 | 15.75–1481.64 |
@@ -417,15 +417,15 @@ applications, by technique group and scenario scale.
 The range disaggregation confirms three regularities. First, every technique's cost range
 widens from S to L on LiDAR and VR—the two applications with the highest user counts—
 because larger user populations raise demand and admit richer (and pricier) infrastructures.
-LiDAR shows the steepest widening: PRIME's maximum rises from $585.96 (S) to $1607.49 (L),
+LiDAR shows the steepest widening: PROMISE's maximum rises from $585.96 (S) to $1607.49 (L),
 a 2.7× increase, and EdgeWiseCR greedy nearly doubles from $468.01 to $1551.64. Second,
 CCTV and Robot ranges are comparatively scale-invariant: CCTV maximums stay within
-$343–$564 for PRIME and $340–$460 across baselines, and Robot remains under $60 for all
-techniques except at the highestRobot (L) configurations. Third, PRIME's lower bound is
+$343–$564 for PROMISE and $340–$460 across baselines, and Robot remains under $60 for all
+techniques except at the highestRobot (L) configurations. Third, PROMISE's lower bound is
 consistently at or above the baselines' lower bound on every app and scale combination,
-while PRIME's upper bound typically exceeds the baselines' upper bound—especially on LiDAR
-(L), where PRIME reaches $1607.49 against the baselines' $1481–$1658. The global table
-confirms that PRIME occupies the high-cost tail of every scale band, reflecting the
+while PROMISE's upper bound typically exceeds the baselines' upper bound—especially on LiDAR
+(L), where PROMISE reaches $1607.49 against the baselines' $1481–$1658. The global table
+confirms that PROMISE occupies the high-cost tail of every scale band, reflecting the
 deployability premium its constraint coverage commands rather than an efficiency deficit.
 
 ### 8.1 Why the Costs Are Not Comparable
@@ -518,7 +518,7 @@ appropriate to that workload.
 | **PROMISE cost (median $)** | 396.67 | 493.91 | 53.62 | 198.70 |
 | **Cheapest baseline cost ($)** | 337.35 | 367.31 | 18.87 | 135.15 |
 | **PROMISE nodes (median)** | 3 | 3 | 3 | 4 |
-| **MS-GD-P nodes (median)** | 3 | 3 | 3 | 3 |
+| **MS-GD-P nodes (median)** | 20 | 20 | 20 | 16 |
 | **Baseline feasibility failure** | `one_layer_mist` (0 %) | `one_layer_mist` (0 %), `one_layer_cloud` (91.7 %) | `one_layer_cloud` (0 %), `one_layer_mist` (83.3 %) | `one_layer_mist` (0 %) |
 | **EW MILP nodes (median)** | 6 | 4 | 3 | 6 |
 | **PROMISE/baseline speed gap** | 1 072× | 949× | 1 045× | 1 201× |
@@ -629,9 +629,9 @@ search space:
 
 | Strengths | Weaknesses |
 |:----------|:-----------|
-| Sub-millisecond execution (4–5 ms) | Only 6/12 hard constraints |
+| Millisecond execution (4–5 ms) | Only 6/12 hard constraints |
 | 11.4 % feasibility under provider exclusion | Ignores provider exclusions |
-| Multi-node selection (3 nodes avg) | No optimality guarantee |
+| Multi-node selection (~20 nodes avg) | No optimality guarantee |
 | Genetic algorithm explores diverse solutions | Higher cost than single-node baselines |
 
 ## 12. No Absolute Winner
@@ -648,7 +648,7 @@ infrastructure scale.
 | Offline planning, Robot (≤300 nodes) | PROMISE | Solver time < 1.7 s, full coverage |
 | Offline planning, VR (≤200 nodes) | PROMISE | Solver time < 1 s, full coverage |
 | Real-time, any app, basic constraints | RAOM4CC advanced | Sub-ms execution, 100 % feasibility |
-| Multi-node placement, fast execution | MS-GD-P | 4–5 ms execution, 11.4 % feasibility under exclusion, 3 nodes |
+| Multi-node placement, fast execution | MS-GD-P | 4–5 ms execution, 11.4 % feasibility under exclusion, ~20 nodes |
 | Large-scale, simplified constraints | EdgeWiseCR MILP | 2–3 ms execution, optimal of simplified model |
 | Single-tier requirement | RAOM4CC `one_layer_edge` | Only single-tier variant with 100 % feasibility on all apps |
 
@@ -678,9 +678,9 @@ infrastructure scale.
    Avoid `one_layer_mist` for CCTV, LiDAR, and VR; avoid `one_layer_cloud` for Robot.
 
 7. **For multi-node placement with fast execution:** Use MS-GD-P with caution. It provides
-   4–5 ms execution and selects 3 nodes on average, similar to PROMISE's multi-node approach,
-   but achieves only 11.4 % feasibility under provider exclusion (2.1 % under full device-type
-   coverage). Solutions require manual validation against provider exclusions before deployment.
+   4–5 ms execution and selects ~20 nodes on average—significantly more than PROMISE's 3–4 node
+   solutions—and achieves only 11.4 % feasibility under provider exclusion (2.1 % under full
+   device-type coverage). Solutions require manual validation against provider exclusions before deployment.
 
 8. **For future work:** Investigate hybrid approaches that combine the speed of heuristic
    baselines with the constraint completeness of PROMISE. Constraint propagation and
