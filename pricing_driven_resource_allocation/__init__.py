@@ -26,6 +26,7 @@ Modules
 from . import dataset
 from . import generators
 from . import utils
+from . import algorithms
 from .optimize import optimize
 
 __version__ = '1.0.0'
@@ -40,6 +41,9 @@ __all__ = [
     
     # Utilities subpackage
     'utils',
+
+    # RAOM4CC Algorithms
+    'algorithms',
     
     # Optimization function
     'optimize'

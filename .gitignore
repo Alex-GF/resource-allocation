@@ -213,3 +213,5 @@ __marimo__/
 
 problem-instances/
 model/
+edgewise-cr/
+.agents
