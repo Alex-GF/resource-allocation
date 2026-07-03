@@ -1,17 +1,10 @@
-# Pricing-Driven Resource Allocation in the Computing Continuum — Laboratory Package
+# PROMISE: Pricing-driven Resource Allocation Method for Service Infrastructure Deployment — Laboratory Package
 
-This repository constitutes the laboratory package for the study of pricing-driven
-resource allocation in the computing continuum. It implements PROMISE (Pricing-driven
-Resource allocation Optimiser for Multi-constraint Infrastructure Selection and
-Evaluation), a constraint-programming approach that models twelve hard constraint
-types and delegates optimisation to the PRIME analysis engine, alongside sixteen
-heuristic baselines drawn from three reference frameworks: RAOM4CC (9 variants),
-EdgeWiseCR (6 variants), and MS-GD-P (1 variant).
+Deploying applications across the computing continuum requires selecting infrastructure nodes that jointly satisfy functional and non-functional constraints. As infrastructures grow in scale and heterogeneity, this resource allocation (RA) problem becomes inherently combinatorial and can be viewed as an instance of a configuration problem. Existing solutions, however, rely on ad-hoc formulations that hinder reuse and overlook constraints arising in multi-provider environments.
 
-The package supports the full experimental lifecycle: synthetic topology generation,
-pricing-model construction, constraint-aware problem-instance formulation,
-optimisation via REST API, baseline execution, and statistical comparison across
-9 600 scenarios spanning three infrastructure scales and four application types.
+This paper instantiates the Configuration Problems framework for resource allocation by representing its configuration space as an iPricing, a model originally proposed for the Software-as-a-Service domain. This provides the first evidence supporting the hypothesis that a unified formulation would be enough to represent configuration problems across the continuum. Building on this, we present: (i) a pricing-based formulation of RA; (ii) \approachName, which leverages a pricing analysis engine to solve resource allocation in multi-provider environments; (iii) synthetic generation processes for infrastructure topologies and workload demands; and (iv) a benchmark comprising 9,600 precomputed RA scenarios.
+
+This repository serves as an artifact accompanying the paper described above. It contains the code, datasets, and instructions necessary to reproduce the experiments and results presented in the paper.
 
 > [!IMPORTANT]
 > This laboratory package is submitted for artefact evaluation at **ICSOC**.
